@@ -1,0 +1,44 @@
+version: "3"
+services:
+  redis:
+    image: redis:7.2.4
+    container_name: redis-fastapi
+    expose:
+      - "${REDIS_PORT}"
+
+  db:
+    image: postgres:13
+    container_name: pgdb-auth
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    expose:
+      - "${DB_PORT}"
+    volumes:
+      - pgdbauth:/var/lib/postgresql@13/data/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d ${DB_NAME} -U ${DB_USER}"]
+      interval: 5s
+      timeout: 60s
+      retries: 5
+
+  app:
+    build: .
+    container_name: solution-auth
+    env_file:
+      - ./.env
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./configs/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./configs:/etc/nginx/conf.d:ro
+    depends_on:
+      api:
+        condition: service_started
+    ports:
+      - "80:80"
+
+volumes:
+  pgdbapi:
