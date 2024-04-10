@@ -30,8 +30,11 @@ class StandaloneApplication(gunicorn.app.base.BaseApplication):
         super().__init__()
 
     def load_config(self):
-        config = {key: value for key, value in self.options.items()
-                  if key in self.cfg.settings and value is not None}
+        config = {
+            key: value
+            for key, value in self.options.items()
+            if key in self.cfg.settings and value is not None
+        }
         for key, value in config.items():
             self.cfg.set(key.lower(), value)
 
@@ -39,14 +42,14 @@ class StandaloneApplication(gunicorn.app.base.BaseApplication):
         return self.application
 
 
-#app.include_router()
+# app.include_router()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     options = {
         "bind": "%s:%s" % ("0.0.0.0", "8000"),
         "workers": number_of_workers(),
-        "worker_class": "uvicorn.workers.UvicornWorker"
+        "worker_class": "uvicorn.workers.UvicornWorker",
     }
 
     StandaloneApplication(app, options).run()
