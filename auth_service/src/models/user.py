@@ -1,7 +1,9 @@
 from pydantic import BaseModel
 from datetime import datetime
 from models.value_objects import UserID
-class User (BaseModel):
+
+
+class User(BaseModel):
     """Модель пользователя на сайте."""
 
     user_id: UserID
