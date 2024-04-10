@@ -25,6 +25,7 @@ services:
 
   app:
     build: .
+    command: python main.py
     container_name: solution-auth
     env_file:
       - ./.env

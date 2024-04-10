@@ -4,18 +4,13 @@ import gunicorn.app.base
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 
-
-from core.config import settings
-
-app = FastAPI()
-# (
-#     lifespan=lifespan,
-#     title=settings.project_name,
-#     description="Информация о фильмах, жанрах и людях, участвовавших в их создании",
-#     docs_url='/api/openapi',
-#     openapi_url='/api/openapi.json',
-#     default_response_class=ORJSONResponse
-# )
+app = FastAPI(
+    title="Сервис авторизации",
+    description="Реализует методы аутентификации, авторизации",
+    docs_url='/api/openapi',
+    openapi_url='/api/openapi.json',
+    default_response_class=ORJSONResponse
+)
 
 
 def number_of_workers():
