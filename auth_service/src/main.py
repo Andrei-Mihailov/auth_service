@@ -6,7 +6,7 @@ from fastapi.responses import ORJSONResponse
 
 app = FastAPI(
     title="Сервис авторизации",
-    description="Реализует методы аутентификации, авторизации",
+    description="Реализует методы идентификации, аутентификации, авторизации",
     docs_url="/api/openapi",
     openapi_url="/api/openapi.json",
     default_response_class=ORJSONResponse,

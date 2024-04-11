@@ -10,3 +10,10 @@ class Authentication(BaseModel):
     user_id: UserID
     user_agent: str
     date_auth: datetime
+
+
+class Token(BaseModel):
+    """Модель токена."""
+
+    access_token: str
+    refresh_token: str
