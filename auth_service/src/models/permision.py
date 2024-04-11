@@ -1,9 +1,9 @@
 from pydantic import BaseModel
-from models.value_objects import PermisionID
+from models.value_objects import PermissionID
 
 
 class Permission(BaseModel):
     """Модель разрешений."""
 
-    id: PermisionID
+    id: PermissionID
     name: str

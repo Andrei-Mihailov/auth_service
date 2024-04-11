@@ -4,8 +4,6 @@ from typing import Union
 
 import backoff
 from redis.exceptions import ConnectionError as conn_err_redis
-from elasticsearch import NotFoundError
-from elasticsearch.exceptions import ConnectionError as conn_err_es
 
 from db.postgres_db import postgres
 from db.redis_db import RedisCache

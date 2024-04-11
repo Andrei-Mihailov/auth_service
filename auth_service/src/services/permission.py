@@ -8,5 +8,5 @@ from models.user import User
 from .base_service import BaseService
 
 
-class PermissionsService(BaseService):
+class PermissionService(BaseService):
     pass

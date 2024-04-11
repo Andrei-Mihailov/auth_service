@@ -8,7 +8,7 @@ from uuid import UUID
 UserID = NewType("UserID", UUID)
 AuthID = NewType("AuthID", UUID)
 RoleID = NewType("RoleID", UUID)
-PermisionID = NewType("PermisionID", UUID)
+PermissionID = NewType("PermissionID", UUID)
 
 
 class Role_names(StrEnum):

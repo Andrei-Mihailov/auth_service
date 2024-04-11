@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
-from models.value_objects import UserID, AuthID, RoleID, PermisionID
+from models.value_objects import UserID, AuthID, RoleID, PermissionID
 
 
 class RolesSchema(BaseModel):
@@ -10,5 +10,5 @@ class RolesSchema(BaseModel):
 
 
 class PermissionsSchema(BaseModel):
-    uuid: PermisionID = Field(..., validation_alias="id")
+    uuid: PermissionID = Field(..., validation_alias="id")
     name: str

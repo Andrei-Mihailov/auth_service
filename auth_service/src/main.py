@@ -3,6 +3,7 @@ import multiprocessing
 import gunicorn.app.base
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
+from api.v1 import p_area, roles, access_users
 
 app = FastAPI(
     title="Сервис авторизации",
@@ -37,7 +38,9 @@ class StandaloneApplication(gunicorn.app.base.BaseApplication):
         return self.application
 
 
-# app.include_router()
+app.include_router(p_area.router, prefix='/api/v1/p_area')
+app.include_router(roles.router, prefix='/api/v1/roles')
+app.include_router(access_users.router, prefix='/api/v1/access_users')
 
 
 if __name__ == "__main__":
