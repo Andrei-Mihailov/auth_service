@@ -9,6 +9,11 @@ class RolesSchema(BaseModel):
     permissions: str
 
 
+class UserRoleSchema(BaseModel):
+    uuid: RoleID = Field(..., validation_alias="id")
+    uuid: UserID = Field(..., validation_alias="id")
+
+
 class PermissionsSchema(BaseModel):
     uuid: PermissionID = Field(..., validation_alias="id")
     name: str

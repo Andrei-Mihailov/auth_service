@@ -5,8 +5,8 @@ from pydantic import BaseModel, TypeAdapter
 from datetime import timedelta
 
 from api.dependencies import RoleParams, RoleEditParams, PermissionsParams
-from api.v1.schemas.roles import RolesSchema, PermissionsSchema
-from models.models import Role, Permission
+from api.v1.schemas.roles import RolesSchema, PermissionsSchema, UserRoleSchema
+from models.models import Role, Permission, User_Role
 
 
 from models.value_objects import UserID
@@ -75,7 +75,21 @@ async def list_roles(role_service: Annotated[RoleService, Depends()]) -> list[Ro
              tags=['Роли'])
 async def add_permissions(id_role: str,
                           id_permission: str,
+                          prmission_params: Annotated[PermissionsParams, Depends()],
                           permission_service: Annotated[PermissionService, Depends()]) -> Permission:
+    return Permission
+
+
+# /api/v1/roles/set/{id_role}/{user_id}
+@router.post('/set/{user_id}/{id_role}',
+             response_model=UserRoleSchema,
+             status_code=status.HTTP_200_OK,
+             summary="Назначение ролей",
+             description="Назначение выбранной роли конкретному пользователю",
+             response_description="Ид роли, Ид пользователя",
+             tags=['Роли'])
+async def add_user_role(user_id: str,
+                        id_role: str) -> User_Role:
     return Permission
 
 
