@@ -12,7 +12,7 @@ class Authentication(BaseModel):
     date_auth: datetime
 
 
-class Token(BaseModel):
+class Tokens(BaseModel):
     """Модель токена."""
 
     access_token: str

@@ -1,16 +1,7 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
 
-from models.value_objects import UserID, AuthID, RoleID, PermissionID
-
-
-class UserSchema(BaseModel):
-    uuid: UserID = Field(..., validation_alias="id")
-    login: str
-    firstname: str
-    lastname: str
-    created_at: datetime
-
+from models.value_objects import UserID, AuthID
 
 class AuthenticationSchema(BaseModel):
     uuid: AuthID = Field(..., validation_alias="auth_id")
@@ -20,5 +11,15 @@ class AuthenticationSchema(BaseModel):
 
 
 class TokenSchema(BaseModel):
+    access_token: str
+    refresh_token: str
+
+
+class AuthenticationParams(BaseModel):
+    login: str = Field(description='Логин')
+    password: str = Field(description='Пароль')
+
+
+class TokenParams(BaseModel):
     access_token: str
     refresh_token: str

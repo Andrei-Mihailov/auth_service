@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+""" from pydantic import BaseModel, Field
 
 from core.config import settings
 from models.user import User
@@ -40,3 +40,4 @@ class RoleEditParams(BaseModel):
 
 class PermissionsParams(BaseModel):
     name: str
+ """

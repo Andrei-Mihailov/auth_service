@@ -7,8 +7,9 @@ class User(BaseModel):
     """Модель пользователя на сайте."""
 
     user_id: UserID
-    first_name: str
-    last_name: str
+    first_name: str | None
+    last_name: str | None
     user_name: str
-    password: str
-    created_at: datetime
+    password: bytes
+    created_at: datetime = datetime.now
+    active: bool = True
