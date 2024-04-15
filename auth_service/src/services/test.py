@@ -35,7 +35,7 @@ print(decoded) """
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 print() """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 
 #print(datetime.now())
@@ -43,5 +43,13 @@ from datetime import datetime, timedelta
 print(datetime.timestamp(datetime.now()))
 print(datetime.timestamp(datetime.now() + timedelta(minutes=15)))
 
+
+now_utc = datetime.now(timezone.utc)
+now_unix = now_utc.timestamp()
+expire_utc = datetime.now(timezone.utc) + timedelta(minutes=15)
+expire_unix = expire_utc.timestamp()
+
+print(now_unix)
+print(expire_unix)
 """ if datetime.now(timezone.utc) > datetime.strptime('19:08:34.885792',):
     print("!!") """
