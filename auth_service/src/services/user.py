@@ -8,10 +8,12 @@ from db.redis_db import RedisCache, get_redis
 from models.user import User
 from .base_service import BaseService
 from models.auth import Authentication, Tokens
-from .utils import (encode_jwt,
+from .utils import (create_refresh_token,
+                    create_access_token,
                     decode_jwt,
                     validate_password,
-                    hash_password
+                    hash_password,
+                    ACCESS_TOKEN_TYPE
 )
 from ..core.config import settings
 
@@ -44,6 +46,12 @@ class UserService(BaseService):
     async def get_current_user(token: str = Depends(settings.oauth2_scheme)):
         payload = decode_jwt(token)
         user_uuid = payload.get("sub")
+        type_token = payload.get("type")
+        if type_token != ACCESS_TOKEN_TYPE:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail='invalid token type'
+            )
         exp = payload.get("exp")
         now = datetime.timestamp(datetime.now())
         if now > exp:
@@ -104,12 +112,9 @@ class UserService(BaseService):
       
     
     async def login(self, user_login: str, user_password: str) -> Tokens:
-        user = await self.get_validate_user(user_login, user_password)
-        payload = {
-            "sub": user.user_id, #userid
-            "role": "user" #определиться с тем, храним ли тут роли, одна ли роль или несколько
-        }
-        access_token = encode_jwt(payload)
-        refresh_token = encode_jwt(payload)
-        tokens = Tokens(access_token, refresh_token)
-        return tokens
+        user = await self.get_validate_user(user_login, user_password)    
+                
+        access_token = create_access_token(user)
+        refresh_token = create_refresh_token(user)
+
+        return Tokens(access_token, refresh_token)

@@ -15,7 +15,7 @@ class AuthJWT(BaseModel):
     secret_key: str = "secret-key"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 20
-    refresh_token_expire_days: int = 30
+    refresh_token_expire_minutes: int = 30 * 24 * 60 # 30 дней
 
 class Settings(BaseSettings):
     # Название проекта. Используется в Swagger-документации
