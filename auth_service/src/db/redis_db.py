@@ -56,7 +56,7 @@ class RedisCache(Cache):
         await self.redis.hset('users', f"{user_id}", user_data)
 
     @backoff.on_exception(backoff.expo, conn_err_redis, max_tries=5)
-    async def read_tokens(self, user_id):
+    async def get_user_hash(self, user_id):
         info: bytes = await self.redis.hget('users', user_id)
         return json.loads(info.decode())
 
