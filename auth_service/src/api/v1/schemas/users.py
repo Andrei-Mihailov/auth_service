@@ -1,7 +1,15 @@
 from pydantic import BaseModel, Field
+from datetime import datetime
 
-from core.config import settings
-from models.user import User
+from models.value_objects import UserID
+
+
+class UserSchema(BaseModel):
+    uuid: UserID = Field(..., validation_alias="id")
+    login: str
+    firstname: str
+    lastname: str
+    #created_at: datetime
 
 
 class UserParams(BaseModel):
@@ -16,27 +24,3 @@ class UserEditParams(BaseModel):
     firstname: str = Field(description='Имя', default=None)
     lastname: str = Field(description='Фамилия', default=None)
     password: str = Field(description='Пароль', default=None)
-
-
-class AuthenticationParams(BaseModel):
-    login: str = Field(description='Логин')
-    password: str = Field(description='Пароль')
-
-
-class TokenParams(BaseModel):
-    access_token: str
-    refresh_token: str
-
-
-class RoleParams(BaseModel):
-    type: str
-    permissions: int
-
-
-class RoleEditParams(BaseModel):
-    type: str = Field(description='тип', default=None)
-    permissions: int = Field(description='разрешения', default=None)
-
-
-class PermissionsParams(BaseModel):
-    name: str
