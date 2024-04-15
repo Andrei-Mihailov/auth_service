@@ -19,8 +19,8 @@ from ..core.config import settings
 
 class UserService(BaseService):
     async def get_validate_user(self, user_login: str, user_password: str) -> User:
-        #пока тут не реализован поиск в пг
-        #res = await postgres.execute_query("") #поиск по логину из бд через зпрос или через sqlAlchemy?
+        # TODO: получить пользователя по логину и паролю в pg (модель User) 
+        #res = await postgres.execute_query("")
         user = User()
         if user == None: #если в бд не нашли такой логин
             raise HTTPException(
@@ -47,11 +47,13 @@ class UserService(BaseService):
         payload = decode_jwt(token)
         user_uuid = payload.get("sub")
         type_token = payload.get("type")
+        #получение доступа только по access токену
         if type_token != ACCESS_TOKEN_TYPE:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail='invalid token type'
             )
+        #проверяем срок действия access токена
         exp = payload.get("exp")
         now = datetime.timestamp(datetime.now())
         if now > exp:
@@ -59,7 +61,7 @@ class UserService(BaseService):
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail='token expire'
             )
-        #пока тут не реализован поиск в бд пг
+        # TODO: получить пользователя по uuid в pg (модель User)
         #res = await postgres.execute_query("") #поиск по uuid из бд через зпрос или через sqlAlchemy?
         user = User()
         if user == None: #если в бд пг не нашли такой uuid
@@ -86,7 +88,7 @@ class UserService(BaseService):
         if password:
             user.password = hash_password(password)
         
-        #сохранение пользователя в бд пг
+        # TODO: сохранение изменений пользователя в бд пг
         #await postgres.save_user()
         return True
 
@@ -106,7 +108,7 @@ class UserService(BaseService):
         if password:
             user.password = hash_password(password)
         
-        #сохранение нового пользователя в бд пг
+        # TODO: создание нового пользователя в бд пг
         #await postgres.save_user()
         return True
       

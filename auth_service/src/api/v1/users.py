@@ -33,6 +33,7 @@ async def login(user_params: Annotated[AuthenticationParams, Depends()],
 # /api/v1/users/user_registration
 @router.post('/user_registration',
              #response_model=UserSchema,
+             response_model=bool,
              status_code=status.HTTP_200_OK,
              summary="Регистрация пользователя",
              description="Регистрация пользователя по логину, имени и паролю",
@@ -50,6 +51,7 @@ async def user_registration(user_params: Annotated[UserParams, Depends()],
 # /api/v1/users/change_user_info/{id_user}
 @router.put('/change_user_info/{id_user}',
             #response_model=UserSchema,
+            response_model=bool,
             status_code=status.HTTP_200_OK,
             summary="Редактирование данных пользователя",
             description="Редактирование логина, имени и пароля пользователя",
@@ -83,9 +85,9 @@ async def logout(id_user: str,
 @router.post('/refresh_token/{id_user}',
              response_model=TokenSchema,
              status_code=status.HTTP_200_OK,
-             summary="Запрос refresh токена",
-             description="Запрос refresh токена",
-             response_description="Токены access и refresh",
+             summary="Запрос access токена",
+             description="Запрос access токена",
+             response_description="Access токен",
              tags=['Пользователи'])
 async def refresh_token(id_user: str, token: TokenParams) -> TokenSchema:
     # try:

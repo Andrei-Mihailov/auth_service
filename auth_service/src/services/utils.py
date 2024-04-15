@@ -20,7 +20,7 @@ def create_jwt(token_type: str,
     now_unix = now_utc.timestamp()
     expire_utc = datetime.now(timezone.utc) + timedelta(minutes=expire_minutes)
     expire_unix = expire_utc.timestamp()
-    #expire = datetime.timestamp(datetime.now() + timedelta(minutes=expire_minutes))
+
     jwt_payload.update(
         exp=expire_unix,
         iat=now_unix
@@ -29,6 +29,8 @@ def create_jwt(token_type: str,
 
 
 def create_access_token(user: User):
+    # TODO: добавить разрешения или роль для пользователей в тело ключа
+    # TODO: возможно добавить uuid токена
     payload = {
             "sub": user.user_id, #userid
             "role": "user" #определиться с тем, храним ли тут роли, одна ли роль или несколько
@@ -40,7 +42,7 @@ def create_access_token(user: User):
 
 def create_refresh_token(user: User):
     payload = {
-            "sub": user.user_id, #userid
+            "sub": user.user_id,
     }
     return create_jwt(REFRESH_TOKEN_TYPE,
                       payload,
@@ -51,7 +53,6 @@ def encode_jwt(
         payload: dict,
         private_key: str = settings.auth_jwt.secret_key,
         algorithm: str = settings.auth_jwt.algorithm,
-        #expire_minutes: int = settings.auth_jwt.access_token_expire_minutes
 ):
     return jwt.encode(payload, private_key, algorithm)
 
