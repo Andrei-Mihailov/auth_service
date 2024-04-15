@@ -10,4 +10,3 @@ class Cache(ABC):
     @abstractmethod
     async def set(self, key, value, expire):
         pass
-

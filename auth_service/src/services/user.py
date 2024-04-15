@@ -28,7 +28,9 @@ class UserService(BaseService):
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
     # Функция для генерации JWT-токена
-    def create_access_token(self, data: dict, private_key_path: str, expires_delta: timedelta = None):
+    def create_access_token(
+        self, data: dict, private_key_path: str, expires_delta: timedelta = None
+    ):
         to_encode = data.copy()
         if expires_delta:
             expire = datetime.now() + expires_delta
@@ -38,17 +40,20 @@ class UserService(BaseService):
         encoded_jwt = jwt.encode(to_encode, self.SECRET_KEY, algorithm=self.ALGORITHM)
         return encoded_jwt
 
+
 # Функция для проверки JWT-токена и получения текущего пользователя
 
 
 async def get_current_user(token: str = Depends(UserService.oauth2_scheme)):
     try:
-        decoded_token = jwt.decode(token, UserService.SECRET_KEY, algorithms=[UserService.ALGORITHM])
+        decoded_token = jwt.decode(
+            token, UserService.SECRET_KEY, algorithms=[UserService.ALGORITHM]
+        )
         user_id = decoded_token.get("sub")
         if user_id is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid authentication credentials"
+                detail="Invalid authentication credentials",
             )
         # Здесь логику получения пользователя по user_id
         user = User(...)
@@ -58,15 +63,13 @@ async def get_current_user(token: str = Depends(UserService.oauth2_scheme)):
     except jwt.exceptions.DecodeError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials"
+            detail="Invalid authentication credentials",
         )
     except jwt.exceptions.InvalidAlgorithmError:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token algorithm"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token algorithm"
         )
     except jwt.exceptions.InvalidSignatureError:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token signature"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token signature"
         )
