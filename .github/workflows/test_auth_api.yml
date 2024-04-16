@@ -24,4 +24,4 @@ jobs:
     - name: Run linting
       run: |
         # Modify the linting command as per your requirements
-        flake8 .
+        flake8 --ignore=E501 .

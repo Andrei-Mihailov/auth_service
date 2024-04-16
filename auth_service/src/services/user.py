@@ -51,7 +51,7 @@ class UserService(BaseService):
             # TODO: получить пользователя по uuid в pg (модель User)
             # res = await postgres.execute_query("") #поиск по uuid из бд через зпрос или через sqlAlchemy?
             user = User()
-            if user == None:  # если в бд пг не нашли такой uuid
+            if user is None:  # если в бд пг не нашли такой uuid
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED, detail="user not found"
                 )

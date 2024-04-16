@@ -56,8 +56,7 @@ class RoleService(BaseService):
 
     async def get_default_role(self, session: AsyncSession) -> Role:
         if not (
-            default_role := await self.get_by_name(session,
-                                            DEFAULT_ROLE_DATA["name"])
+            default_role := await self.get_by_name(session, DEFAULT_ROLE_DATA["name"])
         ):
             default_role = await self.create(session, DEFAULT_ROLE_DATA)
 
