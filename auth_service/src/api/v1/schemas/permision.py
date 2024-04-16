@@ -9,11 +9,13 @@ def has_permission(required_access_level: int):
 
         if not check_access_level(token_access_level, required_access_level):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions"
             )
 
     return access_level_checker
 
 
-def check_access_level(token_access_level: int, required_access_level: int) -> bool:
+def check_access_level(token_access_level: int,
+                       required_access_level: int) -> bool:
     return token_access_level >= required_access_level

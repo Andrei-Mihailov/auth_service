@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.constants import DEFAULT_ROLE_DATA
 from models.roles import Role
+from models.user import User
 
 
 class RoleService(BaseService):
@@ -13,7 +14,8 @@ class RoleService(BaseService):
         """Получить роль."""
         return (await session.scalars(select(Role).where(Role.id == role_id))).first()
 
-    async def get_by_name(self, session: AsyncSession, role_name: str) -> Role | None:
+    async def get_by_name(self, session: AsyncSession,
+                          role_name: str) -> Role | None:
         """Получить роль по названию."""
         return (
             await session.scalars(select(Role).where(Role.name == role_name))
@@ -54,7 +56,8 @@ class RoleService(BaseService):
 
     async def get_default_role(self, session: AsyncSession) -> Role:
         if not (
-            default_role := await self.get_by_name(session, DEFAULT_ROLE_DATA["name"])
+            default_role := await self.get_by_name(session,
+                                            DEFAULT_ROLE_DATA["name"])
         ):
             default_role = await self.create(session, DEFAULT_ROLE_DATA)
 

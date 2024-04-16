@@ -1,10 +1,5 @@
-from datetime import datetime
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
 
-from models.user import User
-from db.postgres_db import postgres
-from db.redis_db import RedisCache, get_redis
 from models.user import User
 from .base_service import BaseService
 from models.auth import Authentication, Tokens
@@ -26,19 +21,22 @@ class UserService(BaseService):
         # TODO: получить пользователя по логину и паролю в pg (модель User)
         # res = await postgres.execute_query("")
         user = User()
-        if user == None:  # если в бд не нашли такой логин
+        if user is None:  # если в бд не нашли такой логин
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid username"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="invalid username"
             )
         if not validate_password(
             password=user_password, hashed_password=user.password
         ):  # если пароль не совпадает
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="uncorrect password"
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="uncorrect password"
             )
         if not user.active:  # если пользователь неактивен
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="user is deactive"
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="user is deactive"
             )
 
         return user

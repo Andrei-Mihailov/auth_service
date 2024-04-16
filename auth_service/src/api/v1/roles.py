@@ -1,15 +1,12 @@
-from http import HTTPStatus
-from typing import Annotated, Union
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Body
-from pydantic import BaseModel, TypeAdapter
-from datetime import timedelta
+from typing import Annotated
+from fastapi import APIRouter, Depends, status
+
 
 from api.dependencies import RoleParams, RoleEditParams, PermissionsParams
 from api.v1.schemas.roles import RolesSchema, PermissionsSchema, UserRoleSchema
 from models.models import Role, Permission, User_Role
 
 
-from models.value_objects import UserID
 from services.role import RoleService
 from services.permission import PermissionService
 
@@ -41,7 +38,8 @@ async def create(
     description="Удаление существующей роли",
     tags=["Роли"],
 )
-async def delete(id_role: str, role_service: Annotated[RoleService, Depends()]) -> None:
+async def delete(id_role: str,
+                 role_service: Annotated[RoleService, Depends()]) -> None:
     return None
 
 
@@ -73,7 +71,9 @@ async def change(
     response_description="Ид, тип, разрешения",
     tags=["Роли"],
 )
-async def list_roles(role_service: Annotated[RoleService, Depends()]) -> list[Role]:
+async def list_roles(
+        role_service: Annotated[RoleService, Depends()]
+) -> list[Role]:
     return list[Role]
 
 

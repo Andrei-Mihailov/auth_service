@@ -1,4 +1,4 @@
-from typing import Annotated, Union
+from typing import Annotated
 from fastapi import APIRouter, Depends, status
 from pydantic import TypeAdapter
 
@@ -28,7 +28,8 @@ async def login(
     user_params: Annotated[AuthenticationParams, Depends()],
     user_service: UserService = Depends(),
 ) -> TokenSchema:
-    tokens_resp = await user_service.login(user_params.login, user_params.password)
+    tokens_resp = await user_service.login(user_params.login,
+                                           user_params.password)
 
     return TokenSchema(tokens_resp.access_token, tokens_resp.refresh_token)
 
@@ -93,7 +94,8 @@ async def change_user_info(
     description="Выход текущего авторизованного пользователя",
     tags=["Пользователи"],
 )
-async def logout(token: TokenParams, user_service: UserService = Depends()) -> None:
+async def logout(token: TokenParams,
+                 user_service: UserService = Depends()) -> None:
     return user_service.logout(token.access_token, token.refresh_token)
 
 
@@ -128,7 +130,8 @@ async def refresh_token(
     tags=["Пользователи"],
 )
 async def get_login_history(
-    id_user: str, token: TokenParams, user_service: Annotated[UserService, Depends()]
+    id_user: str, token: TokenParams,
+        user_service: Annotated[UserService, Depends()]
 ) -> list[AuthenticationSchema]:
     auth_data = user_service.login_history(id_user, token.access_token)
     return TypeAdapter(list[AuthenticationSchema]).validate_python(auth_data)

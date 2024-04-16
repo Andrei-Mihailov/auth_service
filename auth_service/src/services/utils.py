@@ -31,7 +31,8 @@ def create_access_token(user: User):
         "role": "user",  # определиться с тем, храним ли тут роли, одна ли роль или несколько
     }
     return create_jwt(
-        ACCESS_TOKEN_TYPE, payload, settings.auth_jwt.access_token_expire_minutes
+        ACCESS_TOKEN_TYPE, payload,
+        settings.auth_jwt.access_token_expire_minutes
     )
 
 
@@ -40,7 +41,8 @@ def create_refresh_token(user: User):
         "sub": user.user_id,
     }
     return create_jwt(
-        REFRESH_TOKEN_TYPE, payload, settings.auth_jwt.refresh_token_expire_minutes
+        REFRESH_TOKEN_TYPE, payload,
+        settings.auth_jwt.refresh_token_expire_minutes
     )
 
 
@@ -66,11 +68,13 @@ def decode_jwt(
         )
     except jwt.exceptions.InvalidAlgorithmError:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token algorithm"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token algorithm"
         )
     except jwt.exceptions.InvalidSignatureError:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token signature"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token signature"
         )
     return decoded
 
@@ -92,14 +96,16 @@ def check_date_and_type_token(payload: dict, type_token_need: str) -> bool:
     # проверка типа токена
     if type_token != type_token_need:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid token type"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="invalid token type"
         )
     # проверяем срок действия access токена
     exp = payload.get("exp")
     now = datetime.timestamp(datetime.now())
     if now > exp:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="token expire, refresh token"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="token expire, refresh token"
         )
 
     return True
