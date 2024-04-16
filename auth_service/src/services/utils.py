@@ -1,7 +1,6 @@
 from datetime import timedelta, datetime, timezone
 
 import jwt
-from passlib.context import CryptContext
 from fastapi import HTTPException, status
 
 from core.config import settings
@@ -98,4 +97,24 @@ def validate_password(
 ) -> bool:
     return settings.pwd_context.verify(password, hashed_password)
 
+
+def check_date_and_type_token(payload: dict,
+                              type_token_need: str) -> bool:
     
+    type_token = payload.get("type")
+    #проверка типа токена
+    if type_token != type_token_need:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail='invalid token type'
+            )
+    #проверяем срок действия access токена
+    exp = payload.get("exp")
+    now = datetime.timestamp(datetime.now())
+    if now > exp:
+        raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail='token expire, refresh token'
+        )
+    
+    return True

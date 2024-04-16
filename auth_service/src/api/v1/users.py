@@ -1,14 +1,12 @@
-from http import HTTPStatus
 from typing import Annotated, Union
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Body
-from pydantic import BaseModel, TypeAdapter
+from fastapi import APIRouter, Depends, status
+from pydantic import TypeAdapter
 
 from api.v1.schemas.auth import (AuthenticationSchema
                                  ,TokenSchema
                                  ,AuthenticationParams
                                  ,TokenParams)
-from api.v1.schemas.users import (UserSchema
-                                 ,UserParams
+from api.v1.schemas.users import (UserParams
                                  ,UserEditParams)
 from services.user import UserService
 
@@ -68,49 +66,35 @@ async def change_user_info(id_user: str,
     #return UserSchema
 
 
-# /api/v1/users/logout/{id_user}
-@router.post('/logout/{id_user}',
-             response_model=None,
+# /api/v1/users/logout
+@router.post('/logout',
+             response_model=bool,
              status_code=status.HTTP_200_OK,
              summary="Выход пользователя",
              description="Выход текущего авторизованного пользователя",
              tags=['Пользователи'])
-async def logout(id_user: str,
-                 token: TokenParams,
-                 user_service: Annotated[UserService, Depends()]) -> None:
-    return None
+async def logout(token: TokenParams,
+                 user_service: UserService = Depends()) -> None:
+    return user_service.logout(token.access_token, token.refresh_token)
 
 
-# /api/v1/p_area/refresh_token/{id_user}
-@router.post('/refresh_token/{id_user}',
+# /api/v1/users/refresh_token
+@router.post('/refresh_token',
              response_model=TokenSchema,
              status_code=status.HTTP_200_OK,
              summary="Запрос access токена",
              description="Запрос access токена",
              response_description="Access токен",
              tags=['Пользователи'])
-async def refresh_token(id_user: str, token: TokenParams) -> TokenSchema:
-    # try:
-    #     current_user: UserService = await get_current_user(token.access_token)
-    #     access_token_expires = timedelta(minutes=UserService.ACCESS_TOKEN_EXPIRE_MINUTES)
-    #     new_access_token = current_user.create_access_token(
-    #         data={"sub": token.refresh_token},
-    #         expires_delta=access_token_expires
-    #     )
-
-    #     # Возвращаем новый access token
-    #     return {"access_token": new_access_token, "token_type": "bearer"}
-
-    # except Exception as e:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_400_BAD_REQUEST,
-    #         detail="Failed to refresh token"
-    #     )
-    return TokenSchema
+async def refresh_token(token: TokenParams,
+                        user_service: UserService = Depends()) -> TokenSchema:
+    
+    new_tokens = user_service.refresh_access_token(token.access_token, token.refresh_token)
+    return TokenSchema(new_tokens.access_token, new_tokens.refresh_token)
 
 
-# /api/v1/p_area/get_login_history/{id_user}
-@router.get('/get_login_history/{id_user}',
+# /api/v1/user/login_history/{id_user}
+@router.get('/login_history/{id_user}',
             response_model=list[AuthenticationSchema],
             status_code=status.HTTP_200_OK,
             summary="История авторизаций",
@@ -120,20 +104,6 @@ async def refresh_token(id_user: str, token: TokenParams) -> TokenSchema:
 async def get_login_history(id_user: str,
                             token: TokenParams,
                             user_service: Annotated[UserService, Depends()]) -> list[AuthenticationSchema]:
-    # try:
-    #     current_user: UserService = await get_current_user(token.access_token)
-    #     access_token_expires = timedelta(minutes=UserService.ACCESS_TOKEN_EXPIRE_MINUTES)
-    #     new_access_token = current_user.create_access_token(
-    #         data={"sub": token.refresh_token},
-    #         expires_delta=access_token_expires
-    #     )
-
-    #     # Возвращаем новый access token
-    #     return {"access_token": new_access_token, "token_type": "bearer"}
-
-    # except Exception as e:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_400_BAD_REQUEST,
-    #         detail="Failed to refresh token"
-    #     )
-    return list[AuthenticationSchema]
+    auth_data = user_service.login_history(id_user, token.access_token)
+    return TypeAdapter(list[AuthenticationSchema]).validate_python(auth_data)
+     

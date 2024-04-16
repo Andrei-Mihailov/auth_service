@@ -13,7 +13,9 @@ from .utils import (create_refresh_token,
                     decode_jwt,
                     validate_password,
                     hash_password,
-                    ACCESS_TOKEN_TYPE
+                    check_date_and_type_token,
+                    ACCESS_TOKEN_TYPE,
+                    REFRESH_TOKEN_TYPE
 )
 from ..core.config import settings
 
@@ -46,30 +48,19 @@ class UserService(BaseService):
     async def get_current_user(token: str = Depends(settings.oauth2_scheme)):
         payload = decode_jwt(token)
         user_uuid = payload.get("sub")
-        type_token = payload.get("type")
-        #получение доступа только по access токену
-        if type_token != ACCESS_TOKEN_TYPE:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail='invalid token type'
-            )
-        #проверяем срок действия access токена
-        exp = payload.get("exp")
-        now = datetime.timestamp(datetime.now())
-        if now > exp:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail='token expire'
-            )
-        # TODO: получить пользователя по uuid в pg (модель User)
-        #res = await postgres.execute_query("") #поиск по uuid из бд через зпрос или через sqlAlchemy?
-        user = User()
-        if user == None: #если в бд пг не нашли такой uuid
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail='user not found'
-            )
-        return user
+
+        if check_date_and_type_token(payload, ACCESS_TOKEN_TYPE):
+            # TODO: проверка access токена в блэк листе redis
+
+            # TODO: получить пользователя по uuid в pg (модель User)
+            #res = await postgres.execute_query("") #поиск по uuid из бд через зпрос или через sqlAlchemy?
+            user = User()
+            if user == None: #если в бд пг не нашли такой uuid
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail='user not found'
+                )
+            return user
     
 
     async def change_user_info(id_user, 
@@ -119,4 +110,42 @@ class UserService(BaseService):
         access_token = create_access_token(user)
         refresh_token = create_refresh_token(user)
 
+        # TODO: добавление refresh токена в вайт-лист редиса
+        # TODO: добавление в бд pg данных об аутентификации модель Authentication
+
         return Tokens(access_token, refresh_token)
+    
+    async def refresh_access_token(self,
+                                   access_token: str,
+                                   refresh_token: str
+                                   ) -> Tokens:
+        
+        payload = decode_jwt(refresh_token)
+        user_uuid = payload.get("sub")
+
+        if check_date_and_type_token(payload, REFRESH_TOKEN_TYPE):
+            # TODO: проверка наличия refresh токена в бд redis (хорошо, если он там есть)
+            
+            # TODO: наити пользователя по user_uuid, вернуть (модель User)
+            user = User()
+            new_access_token = create_access_token(user)
+            new_refresh_token = create_refresh_token(user)
+            # TODO: добавить старый access токен в блэк-лист redis
+            # TODO: удалить старый refresh токен из вайт-листа redis
+            # TODO: добавить новый refresh токен в вайт-лист redis
+            return Tokens(new_access_token, new_refresh_token)
+    
+
+    async def login_history(id_user_history: str,
+                            access_token: str
+            ) -> list[Authentication]:
+        
+        payload = decode_jwt(access_token)
+        user_uuid = payload.get("sub")
+
+        if check_date_and_type_token(payload, ACCESS_TOKEN_TYPE):
+            # TODO: проверка наличия access токена в блэк-листе бд redis (плохо, если он там есть)
+            # TODO: найти пользователя по user_uuid, проверяем есть ли пользователь от лица которого выполняется действие
+            # TODO: получить историю авторизаций по id_user_history модель Authentication
+
+            return list[Authentication]
