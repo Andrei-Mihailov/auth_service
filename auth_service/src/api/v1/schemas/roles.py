@@ -18,14 +18,15 @@ class PermissionsSchema(BaseModel):
     uuid: PermissionID = Field(..., validation_alias="id")
     name: str
 
+
 class RoleParams(BaseModel):
     type: str
     permissions: int
 
 
 class RoleEditParams(BaseModel):
-    type: str = Field(description='тип', default=None)
-    permissions: int = Field(description='разрешения', default=None)
+    type: str = Field(description="тип", default=None)
+    permissions: int = Field(description="разрешения", default=None)
 
 
 class PermissionsParams(BaseModel):

@@ -3,6 +3,7 @@ from datetime import datetime
 
 from models.value_objects import UserID, AuthID
 
+
 class AuthenticationSchema(BaseModel):
     uuid: AuthID = Field(..., validation_alias="auth_id")
     user_id: UserID = Field(..., validation_alias="id")
@@ -17,8 +18,8 @@ class TokenSchema(BaseModel):
 
 
 class AuthenticationParams(BaseModel):
-    login: str = Field(description='Логин')
-    password: str = Field(description='Пароль')
+    login: str = Field(description="Логин")
+    password: str = Field(description="Пароль")
 
 
 class TokenParams(BaseModel):
