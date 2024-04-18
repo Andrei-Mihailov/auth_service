@@ -1,21 +1,28 @@
 from .base_service import BaseService
 from uuid import UUID
+from functools import lru_cache
+from typing import Union
+from fastapi import Depends
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.constants import DEFAULT_ROLE_DATA
+# from core.constants import DEFAULT_ROLE_DATA
 from models.roles import Role
 from models.user import User
+from db.postgres_db import AsyncSession, get_session
+from db.redis_db import RedisCache, get_redis
 
 
 class RoleService(BaseService):
-    async def get(self, session: AsyncSession, role_id: UUID) -> Role | None:
+    def __init__(self, cache: RedisCache, storage: AsyncSession):
+        super().__init__(cache, storage)
+
+    async def get(self, session: AsyncSession, role_id: UUID) -> Union[Role, None]:
         """Получить роль."""
         return (await session.scalars(select(Role).where(Role.id == role_id))).first()
 
     async def get_by_name(self, session: AsyncSession,
-                          role_name: str) -> Role | None:
+                          role_name: str) -> Union[Role, None]:
         """Получить роль по названию."""
         return (
             await session.scalars(select(Role).where(Role.name == role_name))
@@ -61,3 +68,12 @@ class RoleService(BaseService):
             default_role = await self.create(session, DEFAULT_ROLE_DATA)
 
         return default_role
+
+
+@lru_cache()
+def get_role_service(
+        redis: RedisCache = Depends(get_redis),
+        db: AsyncSession = Depends(get_session),
+) -> RoleService:
+
+    return RoleService(redis, db)

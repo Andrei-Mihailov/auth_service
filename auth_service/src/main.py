@@ -1,9 +1,24 @@
 import multiprocessing
-
 import gunicorn.app.base
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
+from redis.asyncio import Redis
+from contextlib import asynccontextmanager
+
 from api.v1 import users, roles, access_users
+from db import postgres_db
+from db import redis_db
+from core.config import settings
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    redis_db.redis = Redis(host=settings.redis_host, port=settings.redis_port)
+    from models.entity import User
+    await postgres_db.create_database()
+    yield
+    await redis_db.redis.close()
+
 
 app = FastAPI(
     title="Сервис авторизации",

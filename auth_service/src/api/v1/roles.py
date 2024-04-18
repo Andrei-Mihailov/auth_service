@@ -2,13 +2,13 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, status
 
 
-from api.dependencies import RoleParams, RoleEditParams, PermissionsParams
-from api.v1.schemas.roles import RolesSchema, PermissionsSchema, UserRoleSchema
-from models.models import Role, Permission, User_Role
+from api.v1.schemas.roles import (RolesSchema, PermissionsSchema, UserRoleSchema,
+                                  RoleParams, RoleEditParams, PermissionsParams)
+from models.roles import Role, Permission, User_Role
 
 
-from services.role import RoleService
-from services.permission import PermissionService
+from services.role import RoleService, get_role_service
+from services.permission import PermissionService, get_permission_service
 
 router = APIRouter()
 
@@ -25,7 +25,7 @@ router = APIRouter()
 )
 async def create(
     role_params: Annotated[RoleParams, Depends()],
-    role_service: Annotated[RoleService, Depends()],
+    role_service: Annotated[RoleService, Depends(get_role_service)],
 ) -> Role:
     return Role
 
@@ -39,14 +39,14 @@ async def create(
     tags=["Роли"],
 )
 async def delete(id_role: str,
-                 role_service: Annotated[RoleService, Depends()]) -> None:
+                 role_service: Annotated[RoleService, Depends(get_role_service)]) -> None:
     return None
 
 
 # /api/v1/roles/create/{id_role}
 @router.put(
     "/change/{id_role}",
-    response_model=RolesSchema,
+    # response_model=RolesSchema,
     status_code=status.HTTP_200_OK,
     summary="Редактирование роли",
     description="Редактирование существующей роли",
@@ -56,7 +56,7 @@ async def delete(id_role: str,
 async def change(
     id_role: str,
     role_params: Annotated[RoleEditParams, Depends()],
-    role_service: Annotated[RoleService, Depends()],
+    role_service: Annotated[RoleService, Depends(get_role_service)],
 ) -> Role:
     return Role
 
@@ -64,7 +64,7 @@ async def change(
 # /api/v1/roles/list
 @router.get(
     "/list",
-    response_model=list[RolesSchema],
+    # response_model=list[RolesSchema],
     status_code=status.HTTP_200_OK,
     summary="Список ролей",
     description="Список существующих ролей",
@@ -72,7 +72,7 @@ async def change(
     tags=["Роли"],
 )
 async def list_roles(
-        role_service: Annotated[RoleService, Depends()]
+        role_service: Annotated[RoleService, Depends(get_role_service)]
 ) -> list[Role]:
     return list[Role]
 
@@ -80,7 +80,7 @@ async def list_roles(
 # /api/v1/roles/add_permissions/{id_role}/{id_permission}
 @router.post(
     "/add_permissions/{id_role}/{id_permission}",
-    response_model=PermissionsSchema,
+    # response_model=PermissionsSchema,
     status_code=status.HTTP_200_OK,
     summary="Добавление разрешений",
     description="Добавление разрешений для роли по их ИД",
@@ -91,7 +91,7 @@ async def add_permissions(
     id_role: str,
     id_permission: str,
     prmission_params: Annotated[PermissionsParams, Depends()],
-    permission_service: Annotated[PermissionService, Depends()],
+    permission_service: Annotated[PermissionService, Depends(get_permission_service)],
 ) -> Permission:
     return Permission
 
@@ -99,7 +99,7 @@ async def add_permissions(
 # /api/v1/roles/set/{id_role}/{user_id}
 @router.post(
     "/set/{user_id}/{id_role}",
-    response_model=UserRoleSchema,
+    # response_model=UserRoleSchema,
     status_code=status.HTTP_200_OK,
     summary="Назначение ролей",
     description="Назначение выбранной роли конкретному пользователю",
@@ -121,6 +121,6 @@ async def add_user_role(user_id: str, id_role: str) -> User_Role:
 async def delete_permissions(
     id_role: str,
     id_permission: str,
-    permission_service: Annotated[PermissionService, Depends()],
+    permission_service: Annotated[PermissionService, Depends(get_permission_service)],
 ) -> None:
     return None

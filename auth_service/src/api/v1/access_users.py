@@ -1,12 +1,11 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, status
 
-from api.dependencies import PermissionsParams
-from api.v1.schemas.roles import PermissionsSchema
-from models.models import Permission
+from api.v1.schemas.roles import PermissionsSchema, PermissionsParams
+from models.permision import Permission
 
 
-from services.permission import PermissionService
+from services.permission import PermissionService, get_permission_service
 
 router = APIRouter()
 
@@ -23,7 +22,7 @@ router = APIRouter()
 )
 async def create(
     permission_params: Annotated[PermissionsParams, Depends()],
-    permission_service: Annotated[PermissionService, Depends()],
+    permission_service: Annotated[PermissionService, Depends(get_permission_service)],
 ) -> Permission:
     return Permission
 
@@ -38,7 +37,7 @@ async def create(
 )
 async def delete_permissions(
         id_permission: str, permission_service: Annotated[
-            PermissionService, Depends()
+            PermissionService, Depends(get_permission_service)
         ]
 ) -> None:
     return None
@@ -56,6 +55,6 @@ async def delete_permissions(
 )
 async def check(
     id_permission: str,
-        permission_service: Annotated[PermissionService, Depends()]
+        permission_service: Annotated[PermissionService, Depends(get_permission_service)]
 ) -> list[Permission]:
     return list[Permission]

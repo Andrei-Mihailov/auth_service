@@ -1,6 +1,10 @@
 from fastapi import Depends, HTTPException, status
+from functools import lru_cache
+from typing import Union
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from models.user import User
+
+from models.entity import User
 from .base_service import BaseService
 from models.auth import Authentication, Tokens
 from .utils import (
@@ -13,14 +17,17 @@ from .utils import (
     ACCESS_TOKEN_TYPE,
     REFRESH_TOKEN_TYPE,
 )
-from ..core.config import settings
+from core.config import settings
+from db.postgres_db import PostgresDatabase, get_session
+from db.redis_db import RedisCache, get_redis
 
 
 class UserService(BaseService):
+    def __init__(self, cache: RedisCache, storage: AsyncSession):
+        super().__init__(cache, storage)
+
     async def get_validate_user(self, user_login: str, user_password: str) -> User:
-        # TODO: получить пользователя по логину и паролю в pg (модель User)
-        # res = await postgres.execute_query("")
-        user = User()
+        user = await self.get_user_by_login(user_login)
         if user is None:  # если в бд не нашли такой логин
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -41,7 +48,7 @@ class UserService(BaseService):
 
         return user
 
-    async def get_current_user(token: str = Depends(settings.oauth2_scheme)):
+    async def get_current_user(self, token: str = Depends(settings.oauth2_scheme)):
         payload = decode_jwt(token)
         user_uuid = payload.get("sub")
 
@@ -58,11 +65,12 @@ class UserService(BaseService):
             return user
 
     async def change_user_info(
+        self,
         id_user,
-        firstname: str | None,
-        lastname: str | None,
-        login: str | None,
-        password: str | None,
+        firstname: Union[str, None],
+        lastname: Union[str, None],
+        login: Union[str, None],
+        password: Union[str, None],
         user: User = Depends(get_current_user),
     ) -> bool:
         if firstname:
@@ -79,7 +87,11 @@ class UserService(BaseService):
         return True
 
     async def create_user(
-        firstname: str | None, lastname: str | None, login: str, password: str
+        self,
+        firstname: Union[str, None],
+        lastname: Union[str, None],
+        login: str,
+        password: str
     ) -> bool:
         user = User()
         if firstname:
@@ -107,7 +119,9 @@ class UserService(BaseService):
         return Tokens(access_token, refresh_token)
 
     async def refresh_access_token(
-        self, access_token: str, refresh_token: str
+        self,
+        access_token: str,
+        refresh_token: str
     ) -> Tokens:
 
         payload = decode_jwt(refresh_token)
@@ -126,7 +140,8 @@ class UserService(BaseService):
             return Tokens(new_access_token, new_refresh_token)
 
     async def login_history(
-        id_user_history: str, access_token: str
+        id_user_history: str,
+        access_token: str
     ) -> list[Authentication]:
 
         payload = decode_jwt(access_token)
@@ -138,3 +153,12 @@ class UserService(BaseService):
             # TODO: получить историю авторизаций по id_user_history модель Authentication
 
             return list[Authentication]
+
+
+@lru_cache()
+def get_user_service(
+        redis: RedisCache = Depends(get_redis),
+        db: AsyncSession = Depends(get_session),
+) -> UserService:
+
+    return UserService(redis, db)
