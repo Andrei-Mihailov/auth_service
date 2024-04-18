@@ -27,7 +27,7 @@ def create_access_token(user: User):
     # TODO: добавить разрешения или роль для пользователей в тело ключа
     # TODO: возможно добавить uuid токена
     payload = {
-        "sub": user.user_id,  # userid
+        "sub": str(user.id),  # userid
         "role": "user",  # определиться с тем, храним ли тут роли, одна ли роль или несколько
     }
     return create_jwt(
@@ -38,7 +38,7 @@ def create_access_token(user: User):
 
 def create_refresh_token(user: User):
     payload = {
-        "sub": user.user_id,
+        "sub": str(user.id),
     }
     return create_jwt(
         REFRESH_TOKEN_TYPE, payload,

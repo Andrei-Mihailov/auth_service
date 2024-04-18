@@ -27,15 +27,13 @@ class UserService(BaseService):
         super().__init__(cache, storage)
 
     async def get_validate_user(self, user_login: str, user_password: str) -> User:
-        user = await self.get_user_by_login(user_login)
+        user: User = await self.get_user_by_login(user_login)
         if user is None:  # если в бд не нашли такой логин
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="invalid username"
+                detail="invalid login"
             )
-        if not validate_password(
-            password=user_password, hashed_password=user.password
-        ):  # если пароль не совпадает
+        if not user.check_password(user_password):  # если пароль не совпадает
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="uncorrect password"
@@ -88,24 +86,10 @@ class UserService(BaseService):
 
     async def create_user(
         self,
-        firstname: Union[str, None],
-        lastname: Union[str, None],
-        login: str,
-        password: str
+        user_params: dict
     ) -> bool:
-        user = User()
-        if firstname:
-            user.first_name = firstname
-        if lastname:
-            user.last_name = lastname
-        if login:
-            user.login = login
-        if password:
-            user.password = hash_password(password)
-
-        # TODO: создание нового пользователя в бд пг
-        # await postgres.save_user()
-        return True
+        res = await self.create_new_user(user_params)
+        return res
 
     async def login(self, user_login: str, user_password: str) -> Tokens:
         user = await self.get_validate_user(user_login, user_password)

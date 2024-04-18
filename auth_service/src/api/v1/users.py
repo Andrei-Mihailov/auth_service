@@ -39,7 +39,7 @@ async def login(
 # /api/v1/users/user_registration
 @router.post(
     "/user_registration",
-    response_model=UserSchema,
+    response_model=bool,
     status_code=status.HTTP_200_OK,
     summary="Регистрация пользователя",
     description="Регистрация пользователя по логину, имени и паролю",
@@ -48,22 +48,17 @@ async def login(
 )
 async def user_registration(
     user_params: Annotated[UserParams, Depends()],
-    db: Annotated[AsyncSession, Depends(get_session)],
+    user_service: UserService = Depends(get_user_service)
 ) -> bool:
-    user_dto = jsonable_encoder(user_params)
-    user = User(**user_dto)
-    db.add(user)
     try:
-        await db.commit()
+        res = await user_service.create_user(user_params)
     except:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail='This login already exists')
-    await db.refresh(user)
-    return user
+    return res
+
 
 # /api/v1/users/change_user_info/{id_user}
-
-
 @router.put(
     "/change_user_info/{id_user}",
     # response_model=UserSchema,
