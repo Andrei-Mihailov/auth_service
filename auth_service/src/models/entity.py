@@ -10,18 +10,7 @@ from db.postgres_db import Base
 from services.utils import hash_password, validate_password
 
 
-class Permission(Base):
-    __tablename__ = 'permissions'
-
-    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True),
-                                     primary_key=True,
-                                     default=uuid.uuid4)
-    name: Mapped[str] = mapped_column(String,
-                                      nullable=False,
-                                      unique=True)
-
-
-class Role(Base):
+class Roles(Base):
     __tablename__ = 'roles'
 
     id: Mapped[UUID] = mapped_column(UUID(as_uuid=True),
@@ -30,9 +19,20 @@ class Role(Base):
     type: Mapped[str] = mapped_column(String,
                                       nullable=False,
                                       unique=True)
-    permissions = relationship("Permission",
-                               backref="role",
-                               uselist=False)
+    permissions: Mapped[list["Permissions"]] = relationship("Permissions", back_populates="role")
+
+
+class Permissions(Base):
+    __tablename__ = 'permissions'
+
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True),
+                                     primary_key=True,
+                                     default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String,
+                                      nullable=False,
+                                      unique=True)
+    role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"))
+    role: Mapped[Roles] = relationship("Roles", back_populates="permissions")
 
 
 class User(Base):
@@ -48,13 +48,18 @@ class User(Base):
                                        nullable=False)
     password: Mapped[str] = mapped_column(String(255),
                                           nullable=False)
-    first_name: Mapped[str] = mapped_column(String(50))
-    last_name: Mapped[str] = mapped_column(String(50))
+    first_name: Mapped[str] = mapped_column(String(50),
+                                            default=None,
+                                            nullable=True)
+    last_name: Mapped[str] = mapped_column(String(50),
+                                           default=None,
+                                           nullable=True)
     created_at: Mapped[DateTime] = mapped_column(DateTime,
                                                  default=datetime.now)
     active: Mapped[Boolean] = mapped_column(Boolean,
                                             default=True)
     role: Mapped[UUID] = mapped_column(ForeignKey("roles.id"),
+                                       default=None,
                                        nullable=True)
 
     def __init__(self,
