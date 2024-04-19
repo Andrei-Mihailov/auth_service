@@ -14,13 +14,14 @@ from core.config import settings
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     redis_db.redis = Redis(host=settings.redis_host, port=settings.redis_port)
-    from models.entity import User
+    # await postgres_db.purge_database()
+    from models.entity import Permissions, Roles, User, Authentication
     await postgres_db.create_database()
     yield
     await redis_db.redis.close()
 
-
 app = FastAPI(
+    lifespan=lifespan,
     title="Сервис авторизации",
     description="Реализует методы идентификации, аутентификации, авторизации",
     docs_url="/api/openapi",
