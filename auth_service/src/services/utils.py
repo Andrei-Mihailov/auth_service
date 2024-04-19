@@ -1,6 +1,7 @@
-from datetime import timedelta, datetime, timezone
-
 import jwt
+import uuid
+
+from datetime import timedelta, datetime, timezone
 from fastapi import HTTPException, status
 
 from core.config import settings
@@ -29,6 +30,7 @@ def create_access_token(user: User):
     payload = {
         "sub": str(user.id),  # userid
         "role": "user",  # определиться с тем, храним ли тут роли, одна ли роль или несколько
+        "self_uuid": str(uuid.uuid4())
     }
     return create_jwt(
         ACCESS_TOKEN_TYPE, payload,
@@ -39,6 +41,7 @@ def create_access_token(user: User):
 def create_refresh_token(user: User):
     payload = {
         "sub": str(user.id),
+        "self_uuid": str(uuid.uuid4())
     }
     return create_jwt(
         REFRESH_TOKEN_TYPE, payload,

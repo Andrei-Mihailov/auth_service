@@ -2,32 +2,60 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, String
+from sqlalchemy import Boolean, Column, DateTime, String, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from db.postgres_db import Base
 from services.utils import hash_password, validate_password
 
 
+class Permission(Base):
+    __tablename__ = 'permissions'
+
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True),
+                                     primary_key=True,
+                                     default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String,
+                                      nullable=False,
+                                      unique=True)
+
+
+class Role(Base):
+    __tablename__ = 'roles'
+
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True),
+                                     primary_key=True,
+                                     default=uuid.uuid4)
+    type: Mapped[str] = mapped_column(String,
+                                      nullable=False,
+                                      unique=True)
+    permissions = relationship("Permission",
+                               backref="role",
+                               uselist=False)
+
+
 class User(Base):
     __tablename__ = 'users'
 
-    id = Column(UUID(as_uuid=True),
-                primary_key=True,
-                default=uuid.uuid4,
-                unique=True,
-                nullable=False)
-    login = Column(String(255),
-                   unique=True,
-                   nullable=False)
-    password = Column(String(255),
-                      nullable=False)
-    first_name = Column(String(50))
-    last_name = Column(String(50))
-    created_at = Column(DateTime,
-                        default=datetime.now)
-    active = Column(Boolean,
-                    default=True)
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True),
+                                     primary_key=True,
+                                     default=uuid.uuid4,
+                                     unique=True,
+                                     nullable=False)
+    login: Mapped[str] = mapped_column(String(255),
+                                       unique=True,
+                                       nullable=False)
+    password: Mapped[str] = mapped_column(String(255),
+                                          nullable=False)
+    first_name: Mapped[str] = mapped_column(String(50))
+    last_name: Mapped[str] = mapped_column(String(50))
+    created_at: Mapped[DateTime] = mapped_column(DateTime,
+                                                 default=datetime.now)
+    active: Mapped[Boolean] = mapped_column(Boolean,
+                                            default=True)
+    role: Mapped[UUID] = mapped_column(ForeignKey("roles.id"),
+                                       nullable=True)
 
     def __init__(self,
                  login: str,
@@ -44,3 +72,21 @@ class User(Base):
 
     def __repr__(self) -> str:
         return f'<User {self.login}>'
+
+
+class Authentication(Base):
+    __tablename__ = 'authentication'
+
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True),
+                                     primary_key=True,
+                                     default=uuid.uuid4,
+                                     unique=True,
+                                     nullable=False)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
+    user_agent: Mapped[str] = mapped_column(String(255),
+                                            nullable=False)
+    date_auth: Mapped[DateTime] = mapped_column(DateTime,
+                                                default=datetime.now)
+
+    def __repr__(self) -> str:
+        return f'<Authentication {self.id}>'

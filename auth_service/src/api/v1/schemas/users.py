@@ -20,7 +20,7 @@ class UserParams(BaseModel):
 
 
 class UserEditParams(BaseModel):
-    login: str = Field(description="Логин", default=None)
-    first_name: str = Field(description="Имя", default=None)
-    last_name: str = Field(description="Фамилия", default=None)
-    password: str = Field(description="Пароль", default=None)
+    login: Union[str, None] = Field(description="Логин", default=None, allow_none=True)
+    first_name: Union[str, None] = Field(description="Имя", default=None, allow_none=True)
+    last_name: Union[str, None] = Field(description="Фамилия", default=None, allow_none=True)
+    password: Union[str, None] = Field(description="Пароль", default=None, allow_none=True)

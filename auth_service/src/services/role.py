@@ -19,47 +19,33 @@ class RoleService(BaseService):
 
     async def get(self, session: AsyncSession, role_id: UUID) -> Union[Role, None]:
         """Получить роль."""
-        return (await session.scalars(select(Role).where(Role.id == role_id))).first()
+        return await self.get_instance_by_id(role_id)
 
     async def get_by_name(self, session: AsyncSession,
                           role_name: str) -> Union[Role, None]:
         """Получить роль по названию."""
-        return (
-            await session.scalars(select(Role).where(Role.name == role_name))
-        ).first()
+        return await self.get_instance_by_name(role_name)
 
     async def create(self, session: AsyncSession, role_data: dict) -> Role:
         """Создание роли."""
-        new_role = Role(**role_data)
-        session.add(new_role)
-        await session.commit()
-
-        return new_role
+        return await self.create_new_instance(role_data)
 
     async def update(
         self, session: AsyncSession, role: Role, update_data: dict
     ) -> Role:
-        for key, value in update_data.items():
-            setattr(role, key, value)
-        await session.commit()
-        await session.refresh(role)
+        await self.change_instance_data(role.id, update_data)
 
     async def delete(self, session: AsyncSession, role: Role) -> Role:
         """Удаление роли."""
-        await session.delete(role)
-        await session.commit()
+        await self.del_instance_by_id(role.id)
 
         return role
 
     async def elements(self, session: AsyncSession):
-        return (await session.scalars(select(Role))).all()
+        return await self.get_all_instance()
 
     async def assign_role(self, session: AsyncSession, role: Role, user: User) -> User:
-        user.role = role
-        await session.commit()
-        await session.refresh(user)
-
-        return user
+        return await self.set_user_role(user, role)
 
     async def get_default_role(self, session: AsyncSession) -> Role:
         if not (

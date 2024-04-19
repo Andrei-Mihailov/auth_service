@@ -10,6 +10,9 @@ class AuthenticationSchema(BaseModel):
     user_agent: str
     date_auth: datetime
 
+    class Config:
+        orm_mode = True
+
 
 class TokenSchema(BaseModel):
     access_token: str
@@ -20,6 +23,11 @@ class TokenSchema(BaseModel):
 class AuthenticationParams(BaseModel):
     login: str = Field(description="Логин")
     password: str = Field(description="Пароль")
+
+
+class AuthenticationData(BaseModel):
+    user_agent: str
+    user_id: UserID
 
 
 class TokenParams(BaseModel):
