@@ -88,30 +88,48 @@ class UserService(BaseService):
         return Tokens(access_token=access_token, refresh_token=refresh_token), user
 
     async def refresh_access_token(
-        self,
-        access_token: str,
-        refresh_token: str
+            self,
+            access_token: str,
+            refresh_token: str
     ) -> Tokens:
-
-        payload = self.token_decode(refresh_token)
+        # Декодирование refresh-токена
+        payload = self.token_service.decode_jwt(refresh_token)
         user_uuid = payload.get("sub")
 
-        if check_date_and_type_token(payload, REFRESH_TOKEN_TYPE):
-            # проверка наличия refresh токена в бд redis (хорошо, если он там есть)
-            if await self.get_from_white_list(refresh_token):
-                # наити пользователя по user_uuid, вернуть (модель User)
-                user = await self.get_instance_by_id(user_uuid)
-                new_access_token = create_access_token(user)
-                new_refresh_token = create_refresh_token(user)
-                # добавить старый access токен в блэк-лист redis
-                await self.add_to_black_list(access_token, 'access')
-                # удалить старый refresh токен из вайт-листа redis
-                await self.del_from_white_list(refresh_token)
-                # добавить новый refresh токен в вайт-лист redis
-                await self.add_to_white_list(new_refresh_token, 'refresh')
+        # Проверка типа и срока действия токена
+        if self.token_service.check_date_and_type_token(payload, REFRESH_TOKEN_TYPE):
+            # Проверка наличия refresh-токена в списке разрешенных
+            if await self.token_service.get_from_white_list(refresh_token):
+                # Получение пользователя по UUID
+                user = await self.user_service.get_instance_by_id(user_uuid)
+
+                # Генерация новых токенов
+                new_access_token = self.token_service.create_access_token(user)
+                new_refresh_token = self.token_service.create_refresh_token(user)
+
+                # Добавление старого access-токена в черный список
+                await self.token_service.add_to_black_list(access_token, 'access')
+
+                # Удаление старого refresh-токена из списка разрешенных
+                await self.token_service.del_from_white_list(refresh_token)
+
+                # Добавление нового refresh-токена в список разрешенных
+                await self.token_service.add_to_white_list(new_refresh_token, 'refresh')
+
+                # Возврат новых токенов
                 return Tokens(access_token=new_access_token, refresh_token=new_refresh_token)
             else:
-                ...  # TODO: что делем если refresh не найден?
+                # Если refresh-токен не найден в списке разрешенных, выбросить исключение
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Refresh-токен недействителен или истек срок его действия"
+                )
+        else:
+            # Обработка ситуации, когда refresh-токен недействителен или истек срок его действия
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Refresh-токен недействителен или истек срок его действия"
+            )
 
 
 @ lru_cache()
