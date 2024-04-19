@@ -39,10 +39,11 @@ class AuthService(BaseService):
         user_uuid = payload.get("sub")
 
         if check_date_and_type_token(payload, ACCESS_TOKEN_TYPE):
-            # TODO: проверка наличия access токена в блэк-листе бд redis (плохо, если он там есть)
-            # получить историю авторизаций по id_user_history модель Authentication
-            auths_list = await self.get_login_history(user_uuid)
-            return auths_list
+            # проверка наличия access токена в блэк-листе бд redis (плохо, если он там есть)
+            if not await self.get_from_black_list(access_token):
+                # получить историю авторизаций по id_user_history модель Authentication
+                auths_list = await self.get_login_history(user_uuid)
+                return auths_list
 
 
 @lru_cache()

@@ -26,7 +26,7 @@ def create_jwt(token_type: str, token_data: dict, expire_minutes: int) -> str:
 
 def create_access_token(user: User):
     # TODO: добавить разрешения или роль для пользователей в тело ключа
-    # TODO: возможно добавить uuid токена
+    # добавлен uuid токена
     payload = {
         "sub": str(user.id),  # userid
         "role": "user",  # определиться с тем, храним ли тут роли, одна ли роль или несколько
