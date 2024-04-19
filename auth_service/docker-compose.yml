@@ -3,6 +3,11 @@ services:
   redis:
     image: redis:7.2.4
     container_name: redis-auth
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 10s
+      retries: 5
+      start_period: 10s
     expose:
       - "${REDIS_PORT}"
 
@@ -20,13 +25,18 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d ${DB_NAME} -U ${DB_USER}"]
       interval: 5s
-      timeout: 60s
+      timeout: 10s
       retries: 5
 
   app:
     build: .
     command: python main.py
     container_name: solution-auth
+    depends_on:
+      redis:
+         condition: service_healthy
+      db:
+         condition: service_healthy
     env_file:
       - ./.env
 

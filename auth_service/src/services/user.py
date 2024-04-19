@@ -34,7 +34,7 @@ class UserService(BaseService):
         user: User = await self.get_user_by_login(user_login)
         if user is None:  # если в бд не нашли такой логин
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
+                status_code=status.HTTP_404_NOT_FOUND,
                 detail="invalid login"
             )
         if not user.check_password(user_password):  # если пароль не совпадает
@@ -53,21 +53,25 @@ class UserService(BaseService):
     async def change_user_info(
         self,
         access_token: str,
-        user_data: dict
+        user_data: dict,
+        user_id: str
     ) -> bool:
         payload = self.token_decode(access_token)
         user_uuid = payload.get("sub")
-
+        # TODO: првоерить может ли user_uuid менять данные пользователя
         if check_date_and_type_token(payload, ACCESS_TOKEN_TYPE):
             # проверка access токена в блэк листе redis
             if not await self.get_from_black_list(access_token):
-                user = await self.change_instance_data(user_uuid, user_data)
+                user = await self.change_instance_data(user_id, user_data)
                 if user is None:  # если в бд пг не нашли такой uuid
                     raise HTTPException(
                         status_code=status.HTTP_401_UNAUTHORIZED, detail="user not found"
                     )
             else:
-                return False  # TODO: проверить варианты ответа пользователю
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="uncorrect token"
+                )
         return True
 
     async def create_user(
@@ -86,6 +90,21 @@ class UserService(BaseService):
         # добавление refresh токена в вайт-лист редиса
         await self.add_to_white_list(refresh_token, 'refresh')
         return Tokens(access_token=access_token, refresh_token=refresh_token), user
+
+    async def logout(
+            self,
+            access_token: str,
+            refresh_token: str
+    ) -> bool:
+        # декодируем, добавляем access в блэк-лист, refresh удаляем из вайт-листа
+        payload_refresh = self.token_decode(refresh_token)
+        payload_access = self.token_decode(access_token)
+
+        await self.add_to_black_list(access_token, 'access')
+        await self.del_from_white_list(refresh_token)
+
+        return True
+
 
     async def refresh_access_token(
         self,
@@ -111,15 +130,16 @@ class UserService(BaseService):
                 await self.add_to_white_list(new_refresh_token, 'refresh')
                 return Tokens(access_token=new_access_token, refresh_token=new_refresh_token)
             else:
-                ...  # TODO: что делем если refresh не найден?
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="uncorrect token"
+                )
 
 
 @ lru_cache()
 def get_user_service(
         redis: RedisCache = Depends(get_redis),
         db: AsyncSession = Depends(get_session),
-
-
 ) -> UserService:
 
     return UserService(redis, db)

@@ -36,6 +36,7 @@ async def login(
     user_agent = request.headers.get("user-agent")
     tokens_resp, user = await user_service.login(user_params.login,
                                                  user_params.password)
+    print(user.id)
     user_agent_data = AuthenticationData(user_agent=user_agent, user_id=user.id)
     await auth_service.new_auth(user_agent_data)
     response = Response()
@@ -66,9 +67,9 @@ async def user_registration(
     return res
 
 
-# /api/v1/users/change_user_info
+# /api/v1/users/change_user_info/{user_id}
 @router.put(
-    "/change_user_info",
+    "/change_user_info/{user_id}",
     # response_model=UserSchema,
     response_model=bool,
     status_code=status.HTTP_200_OK,
@@ -79,12 +80,13 @@ async def user_registration(
 )
 async def change_user_info(
     request: Request,
+    user_id: str,
     user_params: Annotated[UserEditParams, Depends()],
     user_service: UserService = Depends(get_user_service),
 ) -> bool:
     tokens = TokenParams(access_token=request.cookies.get("access_token"),
                          refresh_token=request.cookies.get("refresh_token"))
-    return await user_service.change_user_info(tokens.access_token, user_params)
+    return await user_service.change_user_info(tokens.access_token, user_params, user_id)
     # return UserSchema
 
 
@@ -98,8 +100,10 @@ async def change_user_info(
     tags=["Пользователи"],
 )
 async def logout(request: Request,
-                 user_service: UserService = Depends(get_user_service)) -> None:
-    return user_service.logout(token.access_token, token.refresh_token)
+                 user_service: UserService = Depends(get_user_service)) -> bool:
+    tokens = TokenParams(access_token=request.cookies.get("access_token"),
+                         refresh_token=request.cookies.get("refresh_token"))
+    return await user_service.logout(tokens.access_token, tokens.refresh_token)
 
 
 # /api/v1/users/refresh_token
@@ -126,11 +130,10 @@ async def refresh_token(
     response.set_cookie("refresh_token", new_tokens.refresh_token)
     return response
 
-# /api/v1/user/login_history
 
-
+# /api/v1/users/login_history/{user_id}
 @router.get(
-    "/login_history",
+    "/login_history/{user_id}",
     response_model=list[AuthenticationSchema],
     status_code=status.HTTP_200_OK,
     summary="История авторизаций",
@@ -140,9 +143,21 @@ async def refresh_token(
 )
 async def get_login_history(
     request: Request,
+    user_id: str,
     auth_service: Annotated[AuthService, Depends(get_auth_service)]
 ) -> list[AuthenticationSchema]:
     tokens = TokenParams(access_token=request.cookies.get("access_token"),
                          refresh_token=request.cookies.get("refresh_token"))
-    auth_data = await auth_service.login_history(tokens.access_token)
-    return TypeAdapter(list[AuthenticationSchema]).validate_python(auth_data)
+    auth_data = await auth_service.login_history(user_id, tokens.access_token)
+
+    list_auth_scheme = []
+    for item in auth_data:
+        auth_scheme = AuthenticationSchema(uuid=item.id,
+                                           user_id=item.user_id,
+                                           user_agent=item.user_agent,
+                                           date_auth=item.date_auth)
+        # TODO: определиться с преобразованием моделей
+        #auth_scheme = AuthenticationSchema.from_orm(item)                                   
+        list_auth_scheme.append(auth_scheme)
+    
+    return list_auth_scheme
