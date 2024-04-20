@@ -1,6 +1,7 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, status, HTTPException, Request, Response
 from pydantic import TypeAdapter
+from asyncpg.exceptions import UniqueViolationError
 
 from api.v1.schemas.auth import (
     AuthenticationSchema,
@@ -60,7 +61,7 @@ async def user_registration(
 ) -> bool:
     try:
         res = await user_service.create_user(user_params)
-    except:
+    except UniqueViolationError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="This login already exists"
         )

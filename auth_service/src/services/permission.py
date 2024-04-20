@@ -14,7 +14,6 @@ from fastapi import Depends
 class PermissionService(BaseService):
     async def get_user_permissions(self, access_token: str) -> List[Permission]:
         payload = decode_jwt(access_token)
-        user_uuid = payload.get("sub")
 
         if check_date_and_type_token(payload, ACCESS_TOKEN_TYPE):
             # TODO: Получить пользователя из базы данных, используя user_uuid
