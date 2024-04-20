@@ -28,7 +28,6 @@ class AuthService(BaseService):
         user_id: str,
         access_token: str
     ) -> list[Authentication]:
-
         payload = decode_jwt(jwt_token=access_token)
         user_uuid = payload.get("sub")
         # TODO: проверить разрешение для просмотра истории входа

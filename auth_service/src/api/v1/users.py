@@ -16,6 +16,14 @@ from services.auth import AuthService, get_auth_service
 
 router = APIRouter()
 
+def get_tokens_from_cookie(request: Request) -> TokenParams:
+    try:
+        tokens = TokenParams(access_token=request.cookies.get("access_token"),
+                             refresh_token=request.cookies.get("refresh_token"))
+    except:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail='Tokens is not found')
+    return tokens
 
 # /api/v1/users/login
 @router.post(
@@ -84,8 +92,8 @@ async def change_user_info(
     user_params: Annotated[UserEditParams, Depends()],
     user_service: UserService = Depends(get_user_service),
 ) -> bool:
-    tokens = TokenParams(access_token=request.cookies.get("access_token"),
-                         refresh_token=request.cookies.get("refresh_token"))
+    
+    tokens = get_tokens_from_cookie(request)
     return await user_service.change_user_info(tokens.access_token, user_params, user_id)
     # return UserSchema
 
@@ -101,15 +109,15 @@ async def change_user_info(
 )
 async def logout(request: Request,
                  user_service: UserService = Depends(get_user_service)) -> bool:
-    tokens = TokenParams(access_token=request.cookies.get("access_token"),
-                         refresh_token=request.cookies.get("refresh_token"))
-    return await user_service.logout(tokens.access_token, tokens.refresh_token)
+    tokens = get_tokens_from_cookie(request)
+    return await user_service.logout(access_token=tokens.access_token,
+                                     refresh_token=tokens.refresh_token)
 
 
 # /api/v1/users/refresh_token
 @router.post(
     "/refresh_token",
-    response_model=TokenSchema,
+    response_model=bool,
     status_code=status.HTTP_200_OK,
     summary="Запрос access токена",
     description="Запрос access токена",
@@ -119,16 +127,15 @@ async def logout(request: Request,
 async def refresh_token(
     request: Request,
     user_service: UserService = Depends(get_user_service)
-) -> TokenSchema:
-    tokens = TokenParams(access_token=request.cookies.get("access_token"),
-                         refresh_token=request.cookies.get("refresh_token"))
+) -> bool:
+    tokens = get_tokens_from_cookie(request)
     new_tokens = await user_service.refresh_access_token(
         tokens.access_token, tokens.refresh_token
     )
     response = Response()
     response.set_cookie("access_token", new_tokens.access_token)
     response.set_cookie("refresh_token", new_tokens.refresh_token)
-    return response
+    return True
 
 
 # /api/v1/users/login_history/{user_id}
@@ -146,8 +153,7 @@ async def get_login_history(
     user_id: str,
     auth_service: Annotated[AuthService, Depends(get_auth_service)]
 ) -> list[AuthenticationSchema]:
-    tokens = TokenParams(access_token=request.cookies.get("access_token"),
-                         refresh_token=request.cookies.get("refresh_token"))
+    tokens = get_tokens_from_cookie(request)
     auth_data = await auth_service.login_history(user_id, tokens.access_token)
 
     list_auth_scheme = []

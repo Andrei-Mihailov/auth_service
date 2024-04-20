@@ -79,6 +79,11 @@ def decode_jwt(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token signature"
         )
+    except jwt.exceptions.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired, refresh token"
+        )
     return decoded
 
 
@@ -108,7 +113,7 @@ def check_date_and_type_token(payload: dict, type_token_need: str) -> bool:
     if now > exp:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="token expire, refresh token"
+            detail="Token has expired, refresh token"
         )
 
     return True
