@@ -103,7 +103,9 @@ async def change_user_info(
 async def logout(
     request: Request, user_service: UserService = Depends(get_user_service)
 ) -> None:
-    return user_service.logout(token.access_token, token.refresh_token)
+    access_token = request.cookies.get("access_token")
+    refresh_token = request.cookies.get("refresh_token")
+    return user_service.logout(access_token, refresh_token)
 
 
 # /api/v1/users/refresh_token
