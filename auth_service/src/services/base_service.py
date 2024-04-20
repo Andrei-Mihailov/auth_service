@@ -1,7 +1,7 @@
 import backoff
 import json
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from sqlalchemy.future import select
 from fastapi.encoders import jsonable_encoder
 from typing import Union
@@ -74,7 +74,7 @@ class BaseService(AbstractBaseService):
                 updated_data = model_params
 
             for field, value in updated_data.items():
-                if field in ['login', 'password'] and value is None:
+                if field in ["login", "password"] and value is None:
                     continue
                 setattr(instance, field, value)
 
@@ -142,26 +142,28 @@ class BaseService(AbstractBaseService):
 
     @backoff.on_exception(backoff.expo, conn_err_redis, max_tries=5)
     async def _put_to_cache(
-            self,
-            key: Union[dict, str],
-            value: Union[User, Authentication, dict, list[dict]],
-            expire: int):
-        await self.cache.set(key if isinstance(key, str) else json.dumps(key),
-                             value.json() if isinstance(value, self.model) else json.dumps(value),
-                             expire)
+        self,
+        key: Union[dict, str],
+        value: Union[User, Authentication, dict, list[dict]],
+        expire: int,
+    ):
+        await self.cache.set(
+            key if isinstance(key, str) else json.dumps(key),
+            value.json() if isinstance(value, self.model) else json.dumps(value),
+            expire,
+        )
 
     @backoff.on_exception(backoff.expo, conn_err_redis, max_tries=5)
-    async def _delete_from_cache(
-        self,
-        key: Union[dict, str]
-    ):
+    async def _delete_from_cache(self, key: Union[dict, str]):
         try:
             await self.cache.delete(key if isinstance(key, str) else json.dumps(key))
         except Exception as e:
             print(f"Ошибка при удалении из кэша: {e}")
 
     @backoff.on_exception(backoff.expo, conn_err_redis, max_tries=5)
-    async def _get_from_cache(self, key: Union[dict, str]) -> Union[User, Authentication, None]:
+    async def _get_from_cache(
+        self, key: Union[dict, str]
+    ) -> Union[User, Authentication, None]:
         data = await self.cache.get(json.dumps(key) if isinstance(key, dict) else key)
         if not data:
             return None
@@ -177,7 +179,7 @@ class BaseService(AbstractBaseService):
     async def add_to_white_list(self, token, token_type):
         payload = decode_jwt(jwt_token=token)
         key = "white_list:" + payload.get("self_uuid")
-        if token_type == 'refresh':
+        if token_type == "refresh":
             expire = settings.auth_jwt.refresh_token_expire_minutes
         else:
             expire = settings.auth_jwt.access_token_expire_minutes
@@ -196,7 +198,7 @@ class BaseService(AbstractBaseService):
     async def add_to_black_list(self, token, token_type):
         payload = decode_jwt(jwt_token=token)
         key = "black_list:" + payload.get("self_uuid")
-        if token_type == 'refresh':
+        if token_type == "refresh":
             expire = settings.auth_jwt.refresh_token_expire_minutes
         else:
             expire = settings.auth_jwt.access_token_expire_minutes

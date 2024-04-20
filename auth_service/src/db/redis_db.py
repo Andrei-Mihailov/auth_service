@@ -7,7 +7,6 @@ from redis.asyncio import Redis
 from redis.exceptions import ConnectionError as conn_err_redis
 
 from .cache import Cache
-from core.config import settings
 
 CACHE_EXPIRE_IN_SECONDS = 60 * 5  # 5 минут
 

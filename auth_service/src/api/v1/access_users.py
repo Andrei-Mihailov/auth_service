@@ -36,9 +36,8 @@ async def create(
     tags=["Разрешения"],
 )
 async def delete_permissions(
-        id_permission: str, permission_service: Annotated[
-            PermissionService, Depends(get_permission_service)
-        ]
+    id_permission: str,
+    permission_service: Annotated[PermissionService, Depends(get_permission_service)],
 ) -> None:
     return None
 
@@ -55,6 +54,6 @@ async def delete_permissions(
 )
 async def check(
     id_permission: str,
-        permission_service: Annotated[PermissionService, Depends(get_permission_service)]
+    permission_service: Annotated[PermissionService, Depends(get_permission_service)],
 ) -> list[Permission]:
     return list[Permission]

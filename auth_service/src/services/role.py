@@ -4,9 +4,7 @@ from functools import lru_cache
 from typing import Union
 from fastapi import Depends
 
-from sqlalchemy import select
-
-# from core.constants import DEFAULT_ROLE_DATA
+from core.constants import DEFAULT_ROLE_DATA
 from models.roles import Role
 from models.user import User
 from db.postgres_db import AsyncSession, get_session
@@ -21,8 +19,9 @@ class RoleService(BaseService):
         """Получить роль."""
         return await self.get_instance_by_id(role_id)
 
-    async def get_by_name(self, session: AsyncSession,
-                          role_name: str) -> Union[Role, None]:
+    async def get_by_name(
+        self, session: AsyncSession, role_name: str
+    ) -> Union[Role, None]:
         """Получить роль по названию."""
         return await self.get_instance_by_name(role_name)
 
@@ -55,11 +54,15 @@ class RoleService(BaseService):
 
         return default_role
 
+    async def revoke_role(self, session: AsyncSession, role: Role, user: User) -> User:
+        """Отзыв роли у пользователя."""
+        return await self.del_user_role(user, role)
+
 
 @lru_cache()
 def get_role_service(
-        redis: RedisCache = Depends(get_redis),
-        db: AsyncSession = Depends(get_session),
+    redis: RedisCache = Depends(get_redis),
+    db: AsyncSession = Depends(get_session),
 ) -> RoleService:
 
     return RoleService(redis, db)

@@ -1,6 +1,5 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, status, HTTPException, Request, Response
-from fastapi.encoders import jsonable_encoder
 from pydantic import TypeAdapter
 
 from api.v1.schemas.auth import (
@@ -10,7 +9,7 @@ from api.v1.schemas.auth import (
     AuthenticationData,
     TokenParams,
 )
-from api.v1.schemas.users import UserParams, UserEditParams, UserSchema
+from api.v1.schemas.users import UserParams, UserEditParams
 from services.user import UserService, get_user_service
 from services.auth import AuthService, get_auth_service
 
@@ -31,11 +30,12 @@ async def login(
     request: Request,
     user_params: Annotated[AuthenticationParams, Depends()],
     user_service: UserService = Depends(get_user_service),
-    auth_service: AuthService = Depends(get_auth_service)
+    auth_service: AuthService = Depends(get_auth_service),
 ) -> TokenSchema:
     user_agent = request.headers.get("user-agent")
-    tokens_resp, user = await user_service.login(user_params.login,
-                                                 user_params.password)
+    tokens_resp, user = await user_service.login(
+        user_params.login, user_params.password
+    )
     user_agent_data = AuthenticationData(user_agent=user_agent, user_id=user.id)
     await auth_service.new_auth(user_agent_data)
     response = Response()
@@ -56,13 +56,14 @@ async def login(
 )
 async def user_registration(
     user_params: Annotated[UserParams, Depends()],
-    user_service: UserService = Depends(get_user_service)
+    user_service: UserService = Depends(get_user_service),
 ) -> bool:
     try:
         res = await user_service.create_user(user_params)
     except:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail='This login already exists')
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="This login already exists"
+        )
     return res
 
 
@@ -82,8 +83,10 @@ async def change_user_info(
     user_params: Annotated[UserEditParams, Depends()],
     user_service: UserService = Depends(get_user_service),
 ) -> bool:
-    tokens = TokenParams(access_token=request.cookies.get("access_token"),
-                         refresh_token=request.cookies.get("refresh_token"))
+    tokens = TokenParams(
+        access_token=request.cookies.get("access_token"),
+        refresh_token=request.cookies.get("refresh_token"),
+    )
     return await user_service.change_user_info(tokens.access_token, user_params)
     # return UserSchema
 
@@ -97,8 +100,9 @@ async def change_user_info(
     description="Выход текущего авторизованного пользователя",
     tags=["Пользователи"],
 )
-async def logout(request: Request,
-                 user_service: UserService = Depends(get_user_service)) -> None:
+async def logout(
+    request: Request, user_service: UserService = Depends(get_user_service)
+) -> None:
     return user_service.logout(token.access_token, token.refresh_token)
 
 
@@ -113,11 +117,12 @@ async def logout(request: Request,
     tags=["Пользователи"],
 )
 async def refresh_token(
-    request: Request,
-    user_service: UserService = Depends(get_user_service)
+    request: Request, user_service: UserService = Depends(get_user_service)
 ) -> TokenSchema:
-    tokens = TokenParams(access_token=request.cookies.get("access_token"),
-                         refresh_token=request.cookies.get("refresh_token"))
+    tokens = TokenParams(
+        access_token=request.cookies.get("access_token"),
+        refresh_token=request.cookies.get("refresh_token"),
+    )
     new_tokens = await user_service.refresh_access_token(
         tokens.access_token, tokens.refresh_token
     )
@@ -125,6 +130,7 @@ async def refresh_token(
     response.set_cookie("access_token", new_tokens.access_token)
     response.set_cookie("refresh_token", new_tokens.refresh_token)
     return response
+
 
 # /api/v1/user/login_history
 
@@ -139,10 +145,11 @@ async def refresh_token(
     tags=["Пользователи"],
 )
 async def get_login_history(
-    request: Request,
-    auth_service: Annotated[AuthService, Depends(get_auth_service)]
+    request: Request, auth_service: Annotated[AuthService, Depends(get_auth_service)]
 ) -> list[AuthenticationSchema]:
-    tokens = TokenParams(access_token=request.cookies.get("access_token"),
-                         refresh_token=request.cookies.get("refresh_token"))
+    tokens = TokenParams(
+        access_token=request.cookies.get("access_token"),
+        refresh_token=request.cookies.get("refresh_token"),
+    )
     auth_data = await auth_service.login_history(tokens.access_token)
     return TypeAdapter(list[AuthenticationSchema]).validate_python(auth_data)

@@ -1,22 +1,15 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from functools import lru_cache
-from typing import Union
 from sqlalchemy.ext.asyncio import AsyncSession
 
-
-from models.entity import User, Authentication
+from models.entity import Authentication
 from .base_service import BaseService
 from .utils import (
-    create_refresh_token,
-    create_access_token,
     decode_jwt,
-    validate_password,
-    hash_password,
     check_date_and_type_token,
     ACCESS_TOKEN_TYPE,
-    REFRESH_TOKEN_TYPE,
 )
-from core.config import settings
+
 from db.postgres_db import get_session
 from db.redis_db import RedisCache, get_redis
 
@@ -30,10 +23,7 @@ class AuthService(BaseService):
         # добавление в бд pg данных об аутентификации модель Authentication
         await self.create_new_instance(auth_params)
 
-    async def login_history(
-        self,
-        access_token: str
-    ) -> list[Authentication]:
+    async def login_history(self, access_token: str) -> list[Authentication]:
 
         payload = decode_jwt(jwt_token=access_token)
         user_uuid = payload.get("sub")
@@ -48,8 +38,8 @@ class AuthService(BaseService):
 
 @lru_cache()
 def get_auth_service(
-        redis: RedisCache = Depends(get_redis),
-        db: AsyncSession = Depends(get_session),
+    redis: RedisCache = Depends(get_redis),
+    db: AsyncSession = Depends(get_session),
 ) -> AuthService:
 
     return AuthService(redis, db)

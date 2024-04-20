@@ -14,13 +14,23 @@ class UserSchema(BaseModel):
 
 class UserParams(BaseModel):
     login: str = Field(description="Логин")
-    first_name: Union[str, None] = Field(description="Имя", default=None, allow_none=True)
-    last_name: Union[str, None] = Field(description="Фамилия", default=None, allow_none=True)
+    first_name: Union[str, None] = Field(
+        description="Имя", default=None, allow_none=True
+    )
+    last_name: Union[str, None] = Field(
+        description="Фамилия", default=None, allow_none=True
+    )
     password: str = Field(description="Пароль")
 
 
 class UserEditParams(BaseModel):
     login: Union[str, None] = Field(description="Логин", default=None, allow_none=True)
-    first_name: Union[str, None] = Field(description="Имя", default=None, allow_none=True)
-    last_name: Union[str, None] = Field(description="Фамилия", default=None, allow_none=True)
-    password: Union[str, None] = Field(description="Пароль", default=None, allow_none=True)
+    first_name: Union[str, None] = Field(
+        description="Имя", default=None, allow_none=True
+    )
+    last_name: Union[str, None] = Field(
+        description="Фамилия", default=None, allow_none=True
+    )
+    password: Union[str, None] = Field(
+        description="Пароль", default=None, allow_none=True
+    )

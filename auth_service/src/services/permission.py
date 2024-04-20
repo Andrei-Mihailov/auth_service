@@ -10,6 +10,7 @@ from db.redis_db import RedisCache, get_redis
 from db.postgres_db import AsyncSession, get_session
 from fastapi import Depends
 
+
 class PermissionService(BaseService):
     async def get_user_permissions(self, access_token: str) -> List[Permission]:
         payload = decode_jwt(access_token)
@@ -22,7 +23,7 @@ class PermissionService(BaseService):
             if user is None:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Пользователь не найден"
+                    detail="Пользователь не найден",
                 )
 
             roles = user.roles
@@ -47,7 +48,9 @@ class PermissionService(BaseService):
         permission = Permission(name=name)
         return permission
 
-    async def assign_permission_to_role(self, role_name: str, permission_name: str) -> bool:
+    async def assign_permission_to_role(
+        self, role_name: str, permission_name: str
+    ) -> bool:
         # TODO: Реализовать назначение разрешения роли в базе данных.
         role = Role(name=role_name)
 
@@ -56,7 +59,9 @@ class PermissionService(BaseService):
         role.permissions.append(permission)
         return True
 
-    async def remove_permission_from_role(self, role_name: str, permission_name: str) -> bool:
+    async def remove_permission_from_role(
+        self, role_name: str, permission_name: str
+    ) -> bool:
         # TODO: Реализовать удаление разрешения из роли в базе данных.
         role = Role(name=role_name)
 
@@ -65,10 +70,11 @@ class PermissionService(BaseService):
         role.permissions.remove(permission)
         return True
 
+
 @lru_cache()
 def get_permission_service(
-        redis: RedisCache = Depends(get_redis),
-        db: AsyncSession = Depends(get_session),
+    redis: RedisCache = Depends(get_redis),
+    db: AsyncSession = Depends(get_session),
 ) -> PermissionService:
 
     return PermissionService(redis, db)

@@ -35,7 +35,10 @@ async def client_factory(request, client_fixture, user_fixture, superuser_fixtur
     if request.param == "user":
         login_data = {"username": user_fixture.username, "password": "testpassword"}
     elif request.param == "superuser":
-        login_data = {"username": superuser_fixture.username, "password": "testpassword"}
+        login_data = {
+            "username": superuser_fixture.username,
+            "password": "testpassword",
+        }
     else:
         raise ValueError("Invalid user type")
 
