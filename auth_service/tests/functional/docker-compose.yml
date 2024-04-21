@@ -38,7 +38,7 @@ services:
       db:
          condition: service_healthy
     env_file:
-      - ../../.env
+      - ./.env
   
   tests:
     build: .

@@ -56,7 +56,7 @@ async def login(
 # /api/v1/users/user_registration
 @router.post(
     "/user_registration",
-    response_model=bool,
+    response_model=UserSchema,
     status_code=status.HTTP_200_OK,
     summary="Регистрация пользователя",
     description="Регистрация пользователя по логину, имени и паролю",
@@ -66,20 +66,23 @@ async def login(
 async def user_registration(
     user_params: Annotated[UserParams, Depends()],
     user_service: UserService = Depends(get_user_service)
-) -> bool:
-    try:
-        res = await user_service.create_user(user_params)
-    except:
+) -> UserSchema:
+    user = await user_service.create_user(user_params)
+    if user is not None:
+        return UserSchema(uuid=user.id,
+                          login=user.login,
+                          first_name=user.first_name,
+                          last_name=user.last_name)
+    else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail='This login already exists')
-    return res
 
 
-# /api/v1/users/change_user_info/{user_id}
+
+# /api/v1/users/change_user_info
 @router.put(
-    "/change_user_info/{user_id}",
-    # response_model=UserSchema,
-    response_model=bool,
+    "/change_user_info",
+    response_model=UserSchema,
     status_code=status.HTTP_200_OK,
     summary="Редактирование данных пользователя",
     description="Редактирование логина, имени и пароля пользователя",
@@ -88,14 +91,16 @@ async def user_registration(
 )
 async def change_user_info(
     request: Request,
-    user_id: str,
     user_params: Annotated[UserEditParams, Depends()],
     user_service: UserService = Depends(get_user_service),
-) -> bool:
+) -> UserSchema:
     
     tokens = get_tokens_from_cookie(request)
-    return await user_service.change_user_info(tokens.access_token, user_params, user_id)
-    # return UserSchema
+    change_user = await user_service.change_user_info(tokens.access_token, user_params)
+    return UserSchema(uuid=change_user.id,
+                      login=change_user.login,
+                      first_name=change_user.first_name,
+                      last_name=change_user.last_name)
 
 
 # /api/v1/users/logout
@@ -117,7 +122,7 @@ async def logout(request: Request,
 # /api/v1/users/refresh_token
 @router.post(
     "/refresh_token",
-    response_model=bool,
+    response_model=TokenSchema,
     status_code=status.HTTP_200_OK,
     summary="Запрос access токена",
     description="Запрос access токена",
@@ -127,7 +132,7 @@ async def logout(request: Request,
 async def refresh_token(
     request: Request,
     user_service: UserService = Depends(get_user_service)
-) -> bool:
+) -> TokenSchema:
     tokens = get_tokens_from_cookie(request)
     new_tokens = await user_service.refresh_access_token(
         tokens.access_token, tokens.refresh_token
@@ -135,11 +140,11 @@ async def refresh_token(
     response = Response()
     response.set_cookie("access_token", new_tokens.access_token)
     response.set_cookie("refresh_token", new_tokens.refresh_token)
-    return True
+    return response
 
 
 # /api/v1/users/login_history/{user_id}
-@router.get(
+@router.post(
     "/login_history/{user_id}",
     response_model=list[AuthenticationSchema],
     status_code=status.HTTP_200_OK,
@@ -153,6 +158,7 @@ async def get_login_history(
     user_id: str,
     auth_service: Annotated[AuthService, Depends(get_auth_service)]
 ) -> list[AuthenticationSchema]:
+
     tokens = get_tokens_from_cookie(request)
     auth_data = await auth_service.login_history(user_id, tokens.access_token)
 
@@ -161,9 +167,7 @@ async def get_login_history(
         auth_scheme = AuthenticationSchema(uuid=item.id,
                                            user_id=item.user_id,
                                            user_agent=item.user_agent,
-                                           date_auth=item.date_auth)
-        # TODO: определиться с преобразованием моделей
-        #auth_scheme = AuthenticationSchema.from_orm(item)                                   
+                                           date_auth=item.date_auth)                                  
         list_auth_scheme.append(auth_scheme)
     
     return list_auth_scheme

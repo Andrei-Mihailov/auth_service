@@ -30,7 +30,9 @@ class UserService(BaseService):
     def token_decode(self, token):
         return decode_jwt(jwt_token=token)
 
-    async def get_validate_user(self, user_login: str, user_password: str) -> User:
+    async def get_validate_user(self,
+                                user_login: str,
+                                user_password: str) -> User:
         user: User = await self.get_user_by_login(user_login)
         if user is None:  # если в бд не нашли такой логин
             raise HTTPException(
@@ -53,33 +55,32 @@ class UserService(BaseService):
     async def change_user_info(
         self,
         access_token: str,
-        user_data: dict,
-        user_id: str
-    ) -> bool:
+        user_data: dict
+    ) -> User:
         payload = self.token_decode(access_token)
         user_uuid = payload.get("sub")
-        # TODO: првоерить может ли user_uuid менять данные пользователя
+
         if check_date_and_type_token(payload, ACCESS_TOKEN_TYPE):
             # проверка access токена в блэк листе redis
             if not await self.get_from_black_list(access_token):
-                user = await self.change_instance_data(user_id, user_data)
+                user = await self.change_instance_data(user_uuid, user_data)
                 if user is None:  # если в бд пг не нашли такой uuid
                     raise HTTPException(
-                        status_code=status.HTTP_401_UNAUTHORIZED, detail="user not found"
+                        status_code=status.HTTP_401_UNAUTHORIZED, detail="user not found or login exists"
                     )
             else:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="uncorrect token"
                 )
-        return True
+        return user
 
     async def create_user(
         self,
         user_params
-    ) -> bool:
-        res = await self.create_new_instance(user_params)
-        return True if res else False
+    ) -> User:
+        user = await self.create_new_instance(user_params)
+        return user
 
     async def login(self, user_login: str, user_password: str) -> Tokens:
         user = await self.get_validate_user(user_login, user_password)

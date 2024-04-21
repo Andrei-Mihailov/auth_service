@@ -1,35 +1,27 @@
-from os import environ as env
-from dotenv import load_dotenv
-from pydantic import Field
-from pydantic_settings import BaseSettings
-
-
-load_dotenv(".dev.env")  # Загрузка переменных среды из файла `.env`
+""" from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class TestSettings(BaseSettings):
-    es_host: str = Field(
-        default=f'http://{env.get("ELASTIC_HOST")}:{env.get("ELASTIC_PORT")}'
-    )
+    DB_NAME: str
+    DB_USER: str
+    DB_PASSWORD: str
+    DB_HOST:str
+    DB_PORT: int
 
-    es_film_id_field: str = "00000000-0d90-4353-88ba-4ccc5d2c07ff"
-    es_film_index: str = Field(default="films")
-    es_film_mapping: str = Field(default=f"testdata/{es_film_index}_schema.txt")
+    REDIS_HOST: str
+    REDIS_PORT: int
 
-    es_person_id_field: str = "3d8d9bf5-0d23-4353-88ba-4ccc5d2c07ff"
-    es_person_index: str = Field(default="persons")
-    es_person_mapping: str = Field(default=f"testdata/{es_person_index}_schema.txt")
+    SERVICE_HOST: str
+    SERVICE_PORT: int
 
-    es_genre_id_field: str = "3d8d9bf5-0d90-4353-88ba-4ccc5d2c07ff"
-    es_genre_index: str = Field(default="genres")
-    es_genre_mapping: str = Field(default=f"testdata/{es_genre_index}_schema.txt")
+    @property
+    def SERVISE_URL(self):
+        return f"http://{self.SERVICE_HOST}:{self.SERVICE_PORT}"
 
-    redis_host: str = Field(default={env.get("REDIS_HOST")})
-    redis_port: str = Field(default={env.get("REDIS_PORT")})
+    @property
+    def DATABASE_URL(self):
+        return f"postgresql+psycopg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}/{self.DB_NAME}"
 
-    service_url: str = Field(
-        default=f'http://{env.get("SERVICE_HOST")}:{env.get("SERVICE_PORT")}'
-    )
+    model_config = SettingsConfigDict(env_file=".env")
 
-
-test_settings = TestSettings()
+test_settings = TestSettings() """
