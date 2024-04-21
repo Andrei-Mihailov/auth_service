@@ -6,7 +6,5 @@ class RoleAccess(IntEnum):
     ADMIN = 10
     SUPERUSER = 20
 
-DEFAULT_ROLE_DATA = {
-    'name': 'user',
-    'access_level': 1
-}
+
+DEFAULT_ROLE_DATA = {"name": "user", "access_level": 1}
