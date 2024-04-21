@@ -178,3 +178,4 @@ async def test_logout(make_post_request):
     url = SERVICE_URL + f"/api/v1/users/login_history/{pytest.new_user_id}"
     response = await make_post_request(url, cookie=cookies)
     assert response.status == HTTPStatus.FORBIDDEN
+

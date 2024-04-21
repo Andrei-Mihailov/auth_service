@@ -63,5 +63,5 @@ pg_config_data = PostgreSQLConfig(
     user=settings.db_user,
     password=settings.db_password,
     host=settings.db_host,
-    port=settings.db_port
+    port=settings.db_port,
 )

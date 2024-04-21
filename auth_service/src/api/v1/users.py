@@ -1,12 +1,8 @@
 from typing import Annotated
-from fastapi import (
-    APIRouter,
-    Depends,
-    status,
-    HTTPException,
-    Request,
-    Response
-)
+from fastapi import APIRouter, Depends, status, HTTPException, Request, Response
+from pydantic import TypeAdapter
+from asyncpg.exceptions import UniqueViolationError
+
 
 from api.v1.schemas.auth import (
     AuthenticationSchema,
@@ -15,7 +11,7 @@ from api.v1.schemas.auth import (
     AuthenticationData,
     TokenParams,
 )
-from api.v1.schemas.users import UserParams, UserEditParams, UserSchema
+from api.v1.schemas.users import UserParams, UserEditParams
 from services.user import UserService, get_user_service
 from services.auth import AuthService, get_auth_service
 
@@ -46,12 +42,11 @@ async def login(
     request: Request,
     user_params: Annotated[AuthenticationParams, Depends()],
     user_service: UserService = Depends(get_user_service),
-    auth_service: AuthService = Depends(get_auth_service)
+    auth_service: AuthService = Depends(get_auth_service),
 ) -> TokenSchema:
     user_agent = request.headers.get("user-agent")
     tokens_resp, user = await user_service.login(user_params.login,
                                                  user_params.password)
-    print(user.id)
     user_agent_data = AuthenticationData(user_agent=user_agent, user_id=user.id)
     await auth_service.new_auth(user_agent_data)
     response = Response()
@@ -85,6 +80,7 @@ async def user_registration(
                             detail='This login already exists')
 
 
+
 # /api/v1/users/change_user_info
 @router.put(
     "/change_user_info",
@@ -109,6 +105,7 @@ async def change_user_info(
                       last_name=change_user.last_name)
 
 
+
 # /api/v1/users/logout
 @router.post(
     "/logout",
@@ -125,6 +122,7 @@ async def logout(request: Request,
                                      refresh_token=tokens.refresh_token)
 
 
+
 # /api/v1/users/refresh_token
 @router.post(
     "/refresh_token",
@@ -136,10 +134,10 @@ async def logout(request: Request,
     tags=["Пользователи"],
 )
 async def refresh_token(
-    request: Request,
-    user_service: UserService = Depends(get_user_service)
+    request: Request, user_service: UserService = Depends(get_user_service)
 ) -> TokenSchema:
     tokens = get_tokens_from_cookie(request)
+
     new_tokens = await user_service.refresh_access_token(
         tokens.access_token, tokens.refresh_token
     )
@@ -176,3 +174,4 @@ async def get_login_history(
                                            date_auth=item.date_auth)
         list_auth_scheme.append(auth_scheme)
     return list_auth_scheme
+

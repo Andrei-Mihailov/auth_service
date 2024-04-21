@@ -15,10 +15,11 @@ from core.config import settings
 async def lifespan(app: FastAPI):
     redis_db.redis = Redis(host=settings.redis_host, port=settings.redis_port)
     # await postgres_db.purge_database()
-    from models.entity import Permissions, Roles, User, Authentication
+
     await postgres_db.create_database()
     yield
     await redis_db.redis.close()
+
 
 app = FastAPI(
     lifespan=lifespan,

@@ -1,21 +1,58 @@
-from async_fastapi_jwt_auth import AuthJWT
-from fastapi import Depends, HTTPException, status
+from typing import Annotated
+from fastapi import APIRouter, Depends, status
+from api.v1.schemas.permission import PermissionParams
+from services.permission import PermissionService
+
+router = APIRouter()
 
 
-def has_permission(required_access_level: int):
-    async def access_level_checker(Authorize: AuthJWT = Depends()):
-        await Authorize.jwt_required()
-        token_access_level = (await Authorize.get_raw_jwt()).get("access_level", 0)
+@router.post(
+    "/create_permission",
+    response_model=bool,
+    status_code=status.HTTP_200_OK,
+    summary="Создание разрешения",
+    description="Создание нового разрешения в системе",
+    response_description="Результат операции: успешно или нет",
+    tags=["Разрешения"],
+)
+async def create_permission(
+    permission_params: Annotated[PermissionParams, Depends()],
+    permission_service: PermissionService = Depends(),
+) -> bool:
+    return await permission_service.create_permission(permission_params.name)
 
-        if not check_access_level(token_access_level, required_access_level):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Insufficient permissions"
-            )
 
-    return access_level_checker
+@router.post(
+    "/assign_permission_to_role",
+    response_model=bool,
+    status_code=status.HTTP_200_OK,
+    summary="Назначение разрешения роли",
+    description="Назначение разрешения определенной роли в системе",
+    response_description="Результат операции: успешно или нет",
+    tags=["Разрешения"],
+)
+async def assign_permission_to_role(
+    permission_params: Annotated[PermissionParams, Depends()],
+    permission_service: PermissionService = Depends(),
+) -> bool:
+    return await permission_service.assign_permission_to_role(
+        permission_params.role_name, permission_params.permission_name
+    )
 
 
-def check_access_level(token_access_level: int,
-                       required_access_level: int) -> bool:
-    return token_access_level >= required_access_level
+@router.post(
+    "/remove_permission_from_role",
+    response_model=bool,
+    status_code=status.HTTP_200_OK,
+    summary="Удаление разрешения из роли",
+    description="Удаление разрешения из определенной роли в системе",
+    response_description="Результат операции: успешно или нет",
+    tags=["Разрешения"],
+)
+async def remove_permission_from_role(
+    permission_params: Annotated[PermissionParams, Depends()],
+    permission_service: PermissionService = Depends(),
+) -> bool:
+    return await permission_service.remove_permission_from_role(
+        permission_params.role_name, permission_params.permission_name
+    )

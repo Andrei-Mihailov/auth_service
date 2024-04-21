@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from functools import lru_cache
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,6 +9,7 @@ from .utils import (
     check_date_and_type_token,
     ACCESS_TOKEN_TYPE
 )
+
 from db.postgres_db import get_session
 from db.redis_db import RedisCache, get_redis
 
@@ -22,11 +23,13 @@ class AuthService(BaseService):
         # добавление в бд pg данных об аутентификации модель Authentication
         await self.create_new_instance(auth_params)
 
+        
     async def login_history(
         self,
         user_id: str,
         access_token: str
     ) -> list[Authentication]:
+
         payload = decode_jwt(jwt_token=access_token)
         user_uuid = payload.get("sub")
         # TODO: проверить разрешение для просмотра истории входа
@@ -49,8 +52,8 @@ class AuthService(BaseService):
 
 @lru_cache()
 def get_auth_service(
-        redis: RedisCache = Depends(get_redis),
-        db: AsyncSession = Depends(get_session),
+    redis: RedisCache = Depends(get_redis),
+    db: AsyncSession = Depends(get_session),
 ) -> AuthService:
 
     return AuthService(redis, db)

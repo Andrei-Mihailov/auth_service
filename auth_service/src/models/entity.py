@@ -2,7 +2,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, String, ForeignKey
+from sqlalchemy import Boolean, DateTime, String, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -11,62 +11,51 @@ from services.utils import hash_password, validate_password
 
 
 class Roles(Base):
-    __tablename__ = 'roles'
+    __tablename__ = "roles"
 
-    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True),
-                                     primary_key=True,
-                                     default=uuid.uuid4)
-    type: Mapped[str] = mapped_column(String,
-                                      nullable=False,
-                                      unique=True)
-    permissions: Mapped[list["Permissions"]] = relationship("Permissions", back_populates="role")
+    id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    type: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    permissions: Mapped[list["Permissions"]] = relationship(
+        "Permissions", back_populates="role"
+    )
 
 
 class Permissions(Base):
-    __tablename__ = 'permissions'
+    __tablename__ = "permissions"
 
-    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True),
-                                     primary_key=True,
-                                     default=uuid.uuid4)
-    name: Mapped[str] = mapped_column(String,
-                                      nullable=False,
-                                      unique=True)
+    id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"))
     role: Mapped[Roles] = relationship("Roles", back_populates="permissions")
 
 
 class User(Base):
-    __tablename__ = 'users'
+    __tablename__ = "users"
 
-    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True),
-                                     primary_key=True,
-                                     default=uuid.uuid4,
-                                     unique=True,
-                                     nullable=False)
-    login: Mapped[str] = mapped_column(String(255),
-                                       unique=True,
-                                       nullable=False)
-    password: Mapped[str] = mapped_column(String(255),
-                                          nullable=False)
-    first_name: Mapped[str] = mapped_column(String(50),
-                                            default=None,
-                                            nullable=True)
-    last_name: Mapped[str] = mapped_column(String(50),
-                                           default=None,
-                                           nullable=True)
-    created_at: Mapped[DateTime] = mapped_column(DateTime,
-                                                 default=datetime.now)
-    active: Mapped[Boolean] = mapped_column(Boolean,
-                                            default=True)
-    role: Mapped[UUID] = mapped_column(ForeignKey("roles.id"),
-                                       default=None,
-                                       nullable=True)
+    id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        unique=True,
+        nullable=False,
+    )
+    login: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    password: Mapped[str] = mapped_column(String(255), nullable=False)
+    first_name: Mapped[str] = mapped_column(String(50), default=None, nullable=True)
+    last_name: Mapped[str] = mapped_column(String(50), default=None, nullable=True)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, default=datetime.now)
+    active: Mapped[Boolean] = mapped_column(Boolean, default=True)
+    role: Mapped[UUID] = mapped_column(
+        ForeignKey("roles.id"), default=None, nullable=True
+    )
 
-    def __init__(self,
-                 login: str,
-                 password: str,
-                 first_name: str,
-                 last_name: str) -> None:
+    def __init__(
+        self, login: str, password: str, first_name: str, last_name: str
+    ) -> None:
         self.login = login
         self.password = hash_password(password)
         self.first_name = first_name
@@ -76,22 +65,22 @@ class User(Base):
         return validate_password(self.password, password)
 
     def __repr__(self) -> str:
-        return f'<User {self.login}>'
+        return f"<User {self.login}>"
 
 
 class Authentication(Base):
-    __tablename__ = 'authentication'
+    __tablename__ = "authentication"
 
-    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True),
-                                     primary_key=True,
-                                     default=uuid.uuid4,
-                                     unique=True,
-                                     nullable=False)
+    id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        unique=True,
+        nullable=False,
+    )
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
-    user_agent: Mapped[str] = mapped_column(String(255),
-                                            nullable=False)
-    date_auth: Mapped[DateTime] = mapped_column(DateTime,
-                                                default=datetime.now)
+    user_agent: Mapped[str] = mapped_column(String(255), nullable=False)
+    date_auth: Mapped[DateTime] = mapped_column(DateTime, default=datetime.now)
 
     def __repr__(self) -> str:
-        return f'<Authentication {self.id}>'
+        return f"<Authentication {self.id}>"

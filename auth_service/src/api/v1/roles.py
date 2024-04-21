@@ -2,8 +2,12 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, status
 
 
-from api.v1.schemas.roles import (RolesSchema, PermissionsSchema, UserRoleSchema,
-                                  RoleParams, RoleEditParams, PermissionsParams)
+from api.v1.schemas.roles import (
+    RolesSchema,
+    RoleParams,
+    RoleEditParams,
+    PermissionsParams,
+)
 from models.roles import Role, Permission, User_Role
 
 
@@ -38,8 +42,9 @@ async def create(
     description="Удаление существующей роли",
     tags=["Роли"],
 )
-async def delete(id_role: str,
-                 role_service: Annotated[RoleService, Depends(get_role_service)]) -> None:
+async def delete(
+    id_role: str, role_service: Annotated[RoleService, Depends(get_role_service)]
+) -> None:
     return None
 
 
@@ -72,7 +77,7 @@ async def change(
     tags=["Роли"],
 )
 async def list_roles(
-        role_service: Annotated[RoleService, Depends(get_role_service)]
+    role_service: Annotated[RoleService, Depends(get_role_service)]
 ) -> list[Role]:
     return list[Role]
 
