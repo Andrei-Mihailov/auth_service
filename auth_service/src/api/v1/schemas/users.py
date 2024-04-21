@@ -5,11 +5,10 @@ from models.value_objects import UserID
 
 
 class UserSchema(BaseModel):
-    uuid: UserID = Field(..., validation_alias="id")
+    uuid: UserID  # = Field(..., validation_alias="id")
     login: str
     first_name: Union[str, None]
     last_name: Union[str, None]
-    # created_at: datetime
 
 
 class UserParams(BaseModel):

@@ -72,6 +72,11 @@ def decode_jwt(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token signature"
         )
+    except jwt.exceptions.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired, refresh token"
+        )
     return decoded
 
 
@@ -83,7 +88,13 @@ def hash_password(
 
 
 def validate_password(hashed_password: bytes, password: str) -> bool:
-    return settings.pwd_context.verify(password, hashed_password)
+    try:
+        return settings.pwd_context.verify(password, hashed_password)
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Incorrect password"
+        )
 
 
 def check_date_and_type_token(payload: dict, type_token_need: str) -> bool:
@@ -99,7 +110,8 @@ def check_date_and_type_token(payload: dict, type_token_need: str) -> bool:
     now = datetime.timestamp(datetime.now())
     if now > exp:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="token expire, refresh token"
-        )
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Token has expired, refresh token"
 
+        )
     return True

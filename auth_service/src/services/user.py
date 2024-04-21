@@ -2,7 +2,6 @@ from fastapi import Depends, HTTPException, status
 from functools import lru_cache
 from sqlalchemy.ext.asyncio import AsyncSession
 
-
 from models.entity import User
 from .base_service import BaseService
 from models.auth import Tokens
@@ -27,11 +26,14 @@ class UserService(BaseService):
     def token_decode(self, token):
         return decode_jwt(jwt_token=token)
 
-    async def get_validate_user(self, user_login: str, user_password: str) -> User:
+    async def get_validate_user(self,
+                                user_login: str,
+                                user_password: str) -> User:
         user: User = await self.get_user_by_login(user_login)
         if user is None:  # если в бд не нашли такой логин
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid login"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="invalid login"
             )
         if not user.check_password(user_password):  # если пароль не совпадает
             raise HTTPException(
@@ -44,7 +46,12 @@ class UserService(BaseService):
 
         return user
 
-    async def change_user_info(self, access_token: str, user_data: dict) -> bool:
+
+    async def change_user_info(
+        self,
+        access_token: str,
+        user_data: dict
+    ) -> User:
         payload = self.token_decode(access_token)
         user_uuid = payload.get("sub")
 
@@ -54,16 +61,23 @@ class UserService(BaseService):
                 user = await self.change_instance_data(user_uuid, user_data)
                 if user is None:  # если в бд пг не нашли такой uuid
                     raise HTTPException(
-                        status_code=status.HTTP_401_UNAUTHORIZED,
-                        detail="user not found",
+                        status_code=status.HTTP_401_UNAUTHORIZED, detail="user not found or login exists"
                     )
             else:
-                return False  # TODO: проверить варианты ответа пользователю
-        return True
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="uncorrect token"
+                )
+        return user
 
-    async def create_user(self, user_params) -> bool:
-        res = await self.create_new_instance(user_params)
-        return True if res else False
+
+    async def create_user(
+        self,
+        user_params
+    ) -> User:
+        user = await self.create_new_instance(user_params)
+        return user
+
 
     async def login(self, user_login: str, user_password: str) -> Tokens:
         user = await self.get_validate_user(user_login, user_password)
@@ -74,6 +88,18 @@ class UserService(BaseService):
         # добавление refresh токена в вайт-лист редиса
         await self.add_to_white_list(refresh_token, "refresh")
         return Tokens(access_token=access_token, refresh_token=refresh_token), user
+
+    async def logout(
+            self,
+            access_token: str,
+            refresh_token: str
+    ) -> bool:
+        # декодируем, добавляем access в блэк-лист, refresh удаляем из вайт-листа
+        payload_refresh = self.token_decode(refresh_token)
+        payload_access = self.token_decode(access_token)
+        await self.add_to_black_list(access_token, 'access')
+        await self.del_from_white_list(refresh_token)
+        return True
 
     async def refresh_access_token(
         self, access_token: str, refresh_token: str
@@ -107,17 +133,11 @@ class UserService(BaseService):
                     access_token=new_access_token, refresh_token=new_refresh_token
                 )
             else:
-                # Если refresh-токен не найден в списке разрешенных, выбросить исключение
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Refresh-токен недействителен или истек срок его действия",
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="uncorrect token"
                 )
-        else:
-            # Обработка ситуации, когда refresh-токен недействителен или истек срок его действия
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Refresh-токен недействителен или истек срок его действия",
-            )
+
 
     async def check_permissions(
         self, access_token: str, required_permissions: list[str]
