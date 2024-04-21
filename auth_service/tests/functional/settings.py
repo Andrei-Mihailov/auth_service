@@ -1,27 +1,17 @@
-""" from pydantic_settings import BaseSettings, SettingsConfigDict
+from os import environ as env
+from dotenv import load_dotenv
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field
 
+load_dotenv(".dev.env") 
 
 class TestSettings(BaseSettings):
-    DB_NAME: str
-    DB_USER: str
-    DB_PASSWORD: str
-    DB_HOST:str
-    DB_PORT: int
-
-    REDIS_HOST: str
-    REDIS_PORT: int
-
-    SERVICE_HOST: str
-    SERVICE_PORT: int
+    SERVICE_HOST: str = Field(default={env.get("SERVICE_HOST")})
+    SERVICE_PORT: int = Field(default={env.get("SERVICE_PORT")})
 
     @property
     def SERVISE_URL(self):
         return f"http://{self.SERVICE_HOST}:{self.SERVICE_PORT}"
 
-    @property
-    def DATABASE_URL(self):
-        return f"postgresql+psycopg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}/{self.DB_NAME}"
 
-    model_config = SettingsConfigDict(env_file=".env")
-
-test_settings = TestSettings() """
+test_settings = TestSettings()

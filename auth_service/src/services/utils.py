@@ -102,7 +102,6 @@ def validate_password(hashed_password: bytes, password: str) -> bool:
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Incorrect password"
         )
-    #return settings.pwd_context.verify(password, hashed_password)
 
 
 def check_date_and_type_token(payload: dict, type_token_need: str) -> bool:
@@ -122,5 +121,4 @@ def check_date_and_type_token(payload: dict, type_token_need: str) -> bool:
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Token has expired, refresh token"
         )
-
     return True

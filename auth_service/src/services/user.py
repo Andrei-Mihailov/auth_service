@@ -1,23 +1,18 @@
 from fastapi import Depends, HTTPException, status
 from functools import lru_cache
-from typing import Union
 from sqlalchemy.ext.asyncio import AsyncSession
-
 
 from models.entity import User
 from .base_service import BaseService
-from models.auth import Authentication, Tokens
+from models.auth import Tokens
 from .utils import (
     create_refresh_token,
     create_access_token,
     decode_jwt,
-    validate_password,
-    hash_password,
     check_date_and_type_token,
     ACCESS_TOKEN_TYPE,
     REFRESH_TOKEN_TYPE,
 )
-from core.config import settings
 from db.postgres_db import get_session
 from db.redis_db import RedisCache, get_redis
 
@@ -100,12 +95,9 @@ class UserService(BaseService):
         # декодируем, добавляем access в блэк-лист, refresh удаляем из вайт-листа
         payload_refresh = self.token_decode(refresh_token)
         payload_access = self.token_decode(access_token)
-
         await self.add_to_black_list(access_token, 'access')
         await self.del_from_white_list(refresh_token)
-
         return True
-
 
     async def refresh_access_token(
         self,

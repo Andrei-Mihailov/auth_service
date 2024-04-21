@@ -9,7 +9,6 @@ from .utils import (
     check_date_and_type_token,
     ACCESS_TOKEN_TYPE
 )
-from core.config import settings
 from db.postgres_db import get_session
 from db.redis_db import RedisCache, get_redis
 
@@ -45,7 +44,7 @@ class AuthService(BaseService):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="uncorrect token"
-                ) 
+                )
 
 
 @lru_cache()

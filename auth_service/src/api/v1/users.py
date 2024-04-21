@@ -1,7 +1,12 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, status, HTTPException, Request, Response
-from fastapi.encoders import jsonable_encoder
-from pydantic import TypeAdapter
+from fastapi import (
+    APIRouter,
+    Depends,
+    status,
+    HTTPException,
+    Request,
+    Response
+)
 
 from api.v1.schemas.auth import (
     AuthenticationSchema,
@@ -16,6 +21,7 @@ from services.auth import AuthService, get_auth_service
 
 router = APIRouter()
 
+
 def get_tokens_from_cookie(request: Request) -> TokenParams:
     try:
         tokens = TokenParams(access_token=request.cookies.get("access_token"),
@@ -24,6 +30,7 @@ def get_tokens_from_cookie(request: Request) -> TokenParams:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail='Tokens is not found')
     return tokens
+
 
 # /api/v1/users/login
 @router.post(
@@ -78,7 +85,6 @@ async def user_registration(
                             detail='This login already exists')
 
 
-
 # /api/v1/users/change_user_info
 @router.put(
     "/change_user_info",
@@ -94,7 +100,7 @@ async def change_user_info(
     user_params: Annotated[UserEditParams, Depends()],
     user_service: UserService = Depends(get_user_service),
 ) -> UserSchema:
-    
+
     tokens = get_tokens_from_cookie(request)
     change_user = await user_service.change_user_info(tokens.access_token, user_params)
     return UserSchema(uuid=change_user.id,
@@ -167,7 +173,6 @@ async def get_login_history(
         auth_scheme = AuthenticationSchema(uuid=item.id,
                                            user_id=item.user_id,
                                            user_agent=item.user_agent,
-                                           date_auth=item.date_auth)                                  
+                                           date_auth=item.date_auth)
         list_auth_scheme.append(auth_scheme)
-    
     return list_auth_scheme

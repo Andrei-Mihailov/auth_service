@@ -8,6 +8,9 @@ auth_service/src/services/test.py
 .AppleDouble
 .LSOverride
 
+.vscode
+.idea
+
 # Icon must end with two \r
 Icon
 
