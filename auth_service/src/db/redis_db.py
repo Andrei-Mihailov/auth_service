@@ -8,8 +8,6 @@ from redis.exceptions import ConnectionError as conn_err_redis
 
 from .cache import Cache
 
-CACHE_EXPIRE_IN_SECONDS = 60 * 5  # 5 минут
-
 
 class RedisCache(Cache):
     def __init__(self):
@@ -34,11 +32,6 @@ class RedisCache(Cache):
 
     @backoff.on_exception(backoff.expo, conn_err_redis, max_tries=5)
     async def set_user_data(self, user_id, user_data):
-        # user_data = json.dumps({'role': role_id,
-        #                         'username': user_name,
-        #                         'first_name': first_name,
-        #                         "last_name": last_name,
-        #                         "created_at": created_at})
         await self.redis.hset("users", f"{user_id}", user_data)
 
     @backoff.on_exception(backoff.expo, conn_err_redis, max_tries=5)

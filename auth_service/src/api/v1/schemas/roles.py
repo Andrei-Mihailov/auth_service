@@ -1,32 +1,41 @@
 from pydantic import BaseModel, Field
 from models.value_objects import UserID, RoleID, PermissionID
-
-
-class RolesSchema(BaseModel):
-    uuid: RoleID = Field(..., validation_alias="id")
-    type: str
-    permissions: str
+from typing import Union
 
 
 class UserRoleSchema(BaseModel):
-    uuid: RoleID = Field(..., validation_alias="id")
-    uuid: UserID = Field(..., validation_alias="id")
+    role_id: RoleID
+    user_id: UserID
 
 
 class PermissionsSchema(BaseModel):
-    uuid: PermissionID = Field(..., validation_alias="id")
+    uuid: PermissionID
     name: str
+
+
+class RolesSchema(BaseModel):
+    uuid: RoleID
+    type: str
+
+
+class RolesPermissionsSchema(BaseModel):
+    uuid: RoleID
+    type: str
+    permissions: Union[list[PermissionsSchema], None]
 
 
 class RoleParams(BaseModel):
     type: str
-    permissions: int
 
 
 class RoleEditParams(BaseModel):
     type: str = Field(description="тип", default=None)
-    permissions: int = Field(description="разрешения", default=None)
 
 
 class PermissionsParams(BaseModel):
     name: str
+
+
+class RolePermissionsParams(BaseModel):
+    role_id: RoleID
+    permissions_id: PermissionID

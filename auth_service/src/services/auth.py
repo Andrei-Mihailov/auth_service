@@ -1,4 +1,4 @@
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
 from functools import lru_cache
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,21 +23,18 @@ class AuthService(BaseService):
         # добавление в бд pg данных об аутентификации модель Authentication
         await self.create_new_instance(auth_params)
 
-        
     async def login_history(
         self,
-        user_id: str,
         access_token: str
     ) -> list[Authentication]:
 
         payload = decode_jwt(jwt_token=access_token)
         user_uuid = payload.get("sub")
-        # TODO: проверить разрешение для просмотра истории входа
         if check_date_and_type_token(payload, ACCESS_TOKEN_TYPE):
             # проверка наличия access токена в блэк-листе бд redis (плохо, если он там есть)
             if not await self.get_from_black_list(access_token):
                 # получить историю авторизаций по id_user_history модель Authentication
-                auths_list = await self.get_login_history(user_id)
+                auths_list = await self.get_login_history(user_uuid)
                 if auths_list is None:
                     raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND, detail="user not found"

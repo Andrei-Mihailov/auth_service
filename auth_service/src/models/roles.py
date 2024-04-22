@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from models.value_objects import RoleID, Role_names
-from models.permision import Permission
+from models.permission import Permission
 from models.user import User
 
 

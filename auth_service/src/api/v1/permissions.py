@@ -1,14 +1,17 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, status
-from api.v1.schemas.permission import PermissionParams
-from services.permission import PermissionService
+from fastapi import APIRouter, Depends, status, HTTPException
+
+from api.v1.schemas.roles import PermissionsParams, PermissionsSchema, RolePermissionsParams
+from services.permission import PermissionService, get_permission_service
+
 
 router = APIRouter()
 
 
+# /api/v1/permissions/create_permission
 @router.post(
     "/create_permission",
-    response_model=bool,
+    response_model=PermissionsSchema,
     status_code=status.HTTP_200_OK,
     summary="Создание разрешения",
     description="Создание нового разрешения в системе",
@@ -16,12 +19,19 @@ router = APIRouter()
     tags=["Разрешения"],
 )
 async def create_permission(
-    permission_params: Annotated[PermissionParams, Depends()],
-    permission_service: PermissionService = Depends(),
-) -> bool:
-    return await permission_service.create_permission(permission_params.name)
+    permission_params: Annotated[PermissionsParams, Depends()],
+    permission_service: PermissionService = Depends(get_permission_service),
+) -> PermissionsSchema:
+    perm = await permission_service.create_permission(permission_params)
+    if perm is not None:
+        return PermissionsSchema(uuid=perm.id,
+                                 name=perm.name)
+    else:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail='This permission already exists')
 
 
+# /api/v1/permissions/assign_permission_to_role
 @router.post(
     "/assign_permission_to_role",
     response_model=bool,
@@ -32,14 +42,13 @@ async def create_permission(
     tags=["Разрешения"],
 )
 async def assign_permission_to_role(
-    permission_params: Annotated[PermissionParams, Depends()],
-    permission_service: PermissionService = Depends(),
+    permission_params: Annotated[RolePermissionsParams, Depends()],
+    permission_service: PermissionService = Depends(get_permission_service),
 ) -> bool:
-    return await permission_service.assign_permission_to_role(
-        permission_params.role_name, permission_params.permission_name
-    )
+    return await permission_service.assign_permission_to_role(permission_params)
 
 
+# /api/v1/permissions/remove_permission_from_role
 @router.post(
     "/remove_permission_from_role",
     response_model=bool,
@@ -50,9 +59,7 @@ async def assign_permission_to_role(
     tags=["Разрешения"],
 )
 async def remove_permission_from_role(
-    permission_params: Annotated[PermissionParams, Depends()],
-    permission_service: PermissionService = Depends(),
+    permission_params: Annotated[RolePermissionsParams, Depends()],
+    permission_service: PermissionService = Depends(get_permission_service),
 ) -> bool:
-    return await permission_service.remove_permission_from_role(
-        permission_params.role_name, permission_params.permission_name
-    )
+    return await permission_service.remove_permission_from_role(permission_params)

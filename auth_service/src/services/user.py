@@ -46,7 +46,6 @@ class UserService(BaseService):
 
         return user
 
-
     async def change_user_info(
         self,
         access_token: str,
@@ -70,14 +69,12 @@ class UserService(BaseService):
                 )
         return user
 
-
     async def create_user(
         self,
         user_params
     ) -> User:
         user = await self.create_new_instance(user_params)
         return user
-
 
     async def login(self, user_login: str, user_password: str) -> Tokens:
         user = await self.get_validate_user(user_login, user_password)
@@ -94,9 +91,6 @@ class UserService(BaseService):
             access_token: str,
             refresh_token: str
     ) -> bool:
-        # декодируем, добавляем access в блэк-лист, refresh удаляем из вайт-листа
-        payload_refresh = self.token_decode(refresh_token)
-        payload_access = self.token_decode(access_token)
         await self.add_to_black_list(access_token, 'access')
         await self.del_from_white_list(refresh_token)
         return True
@@ -105,42 +99,34 @@ class UserService(BaseService):
         self, access_token: str, refresh_token: str
     ) -> Tokens:
         # Декодирование refresh-токена
-        payload = self.token_service.decode_jwt(refresh_token)
+        payload = self.token_decode(refresh_token)
         user_uuid = payload.get("sub")
 
         # Проверка типа и срока действия токена
-        if self.token_service.check_date_and_type_token(payload, REFRESH_TOKEN_TYPE):
-            # Проверка наличия refresh-токена в списке разрешенных
-            if await self.token_service.get_from_white_list(refresh_token):
-                # Получение пользователя по UUID
-                user = await self.user_service.get_instance_by_id(user_uuid)
-
-                # Генерация новых токенов
-                new_access_token = self.token_service.create_access_token(user)
-                new_refresh_token = self.token_service.create_refresh_token(user)
-
-                # Добавление старого access-токена в черный список
-                await self.token_service.add_to_black_list(access_token, "access")
-
-                # Удаление старого refresh-токена из списка разрешенных
-                await self.token_service.del_from_white_list(refresh_token)
-
-                # Добавление нового refresh-токена в список разрешенных
-                await self.token_service.add_to_white_list(new_refresh_token, "refresh")
-
-                # Возврат новых токенов
-                return Tokens(
-                    access_token=new_access_token, refresh_token=new_refresh_token
-                )
+        if check_date_and_type_token(payload, REFRESH_TOKEN_TYPE):
+            # проверка наличия refresh токена в бд redis (хорошо, если он там есть)
+            if await self.get_from_white_list(refresh_token):
+                # наити пользователя по user_uuid, вернуть (модель User)
+                user = await self.get_instance_by_id(user_uuid)
+                new_access_token = create_access_token(user)
+                new_refresh_token = create_refresh_token(user)
+                # добавить старый access токен в блэк-лист redis
+                await self.add_to_black_list(access_token, 'access')
+                # удалить старый refresh токен из вайт-листа redis
+                await self.del_from_white_list(refresh_token)
+                # добавить новый refresh токен в вайт-лист redis
+                await self.add_to_white_list(new_refresh_token, 'refresh')
+                return Tokens(access_token=new_access_token, refresh_token=new_refresh_token)
             else:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="uncorrect token"
                 )
 
-
     async def check_permissions(
-        self, access_token: str, required_permissions: list[str]
+        self,
+        access_token: str,
+        required_permissions: str
     ) -> bool:
         """Проверка прав доступа у пользователя."""
         payload = self.token_decode(access_token)
@@ -153,14 +139,16 @@ class UserService(BaseService):
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="user not found",
                 )
+            try:
+                user_role = await self.get_user_role(user_uuid)
+                user_permissions = []
+                for perm in user_role._data[0].permissions:
+                    user_permissions.append(perm.name)
 
-            user_permissions = (
-                user.roles.permissions
-            )  # предполагается, что у пользователя есть связь с ролями и ролями есть связь с разрешениями
-
-            for permission in required_permissions:
-                if permission not in user_permissions:
+                if required_permissions not in user_permissions:
                     return False
+            except AttributeError:
+                return False
 
         return True
 

@@ -29,7 +29,7 @@ class Permissions(Base):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
-    role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"))
+    role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"), default=None, nullable=True)
     role: Mapped[Roles] = relationship("Roles", back_populates="permissions")
 
 
@@ -49,17 +49,17 @@ class User(Base):
     last_name: Mapped[str] = mapped_column(String(50), default=None, nullable=True)
     created_at: Mapped[DateTime] = mapped_column(DateTime, default=datetime.now)
     active: Mapped[Boolean] = mapped_column(Boolean, default=True)
-    role: Mapped[UUID] = mapped_column(
-        ForeignKey("roles.id"), default=None, nullable=True
-    )
+    role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"), default=None, nullable=True)
+    is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
 
     def __init__(
-        self, login: str, password: str, first_name: str, last_name: str
+        self, login: str, password: str, first_name: str = None, last_name: str = None, is_superuser: bool = False
     ) -> None:
         self.login = login
         self.password = hash_password(password)
         self.first_name = first_name
         self.last_name = last_name
+        self.is_superuser = is_superuser
 
     def check_password(self, password: str) -> bool:
         return validate_password(self.password, password)

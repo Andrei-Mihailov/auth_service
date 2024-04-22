@@ -25,11 +25,10 @@ def create_jwt(token_type: str, token_data: dict, expire_minutes: int) -> str:
 
 
 def create_access_token(user: User):
-    # TODO: добавить разрешения или роль для пользователей в тело ключа
-    # добавлен uuid токена
+    # в теле токена хранится UUID пользователя, его роли и UUID самого токена
     payload = {
         "sub": str(user.id),  # userid
-        "role": "user",  # определиться с тем, храним ли тут роли, одна ли роль или несколько
+        "role_id": str(user.role_id) if user.role_id else None,
         "self_uuid": str(uuid.uuid4()),
     }
     return create_jwt(
@@ -90,7 +89,7 @@ def hash_password(
 def validate_password(hashed_password: bytes, password: str) -> bool:
     try:
         return settings.pwd_context.verify(password, hashed_password)
-    except:
+    except ValueError:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Incorrect password"

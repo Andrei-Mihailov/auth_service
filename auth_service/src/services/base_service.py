@@ -3,6 +3,7 @@ import json
 
 from abc import ABC
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 from fastapi.encoders import jsonable_encoder
 from typing import Union
 
@@ -11,7 +12,7 @@ from redis.exceptions import ConnectionError as conn_err_redis
 from asyncpg.exceptions import PostgresConnectionError as conn_err_pg
 from db.redis_db import RedisCache
 from db.postgres_db import AsyncSession
-from models.entity import User, Authentication
+from models.entity import User, Authentication, Roles, Permissions
 from core.config import settings
 from services.utils import decode_jwt
 
@@ -118,9 +119,9 @@ class BaseService(AbstractBaseService):
 
     @backoff.on_exception(backoff.expo, conn_err_pg, max_tries=5)
     async def get_all_instance(self):
-        stmt = select(self.model)
+        stmt = select(Roles).options(selectinload(Roles.permissions))
         result = await self.storage.execute(stmt)
-        instance = result.scalars().all()
+        instance = result.fetchall()
         return instance
 
     @backoff.on_exception(backoff.expo, conn_err_pg, max_tries=5)
@@ -134,11 +135,70 @@ class BaseService(AbstractBaseService):
         return instance
 
     @backoff.on_exception(backoff.expo, conn_err_pg, max_tries=5)
-    async def set_user_role(self, instance: User, role):
-        instance.role = role
-        await self.storage.commit()
-        await self.storage.refresh(instance)
-        return instance
+    async def permission_to_role(self, permissions_id: str, role_id: str):
+        role = await self.storage.get(Roles, role_id)
+        permissions = await self.storage.get(Permissions, permissions_id)
+        if role is not None and permissions is not None:
+            permissions.role = role
+            self.storage.add(permissions)
+            await self.storage.commit()
+            await self.storage.refresh(permissions)
+            await self.storage.refresh(role)
+            return role
+        else:
+            return None
+
+    @backoff.on_exception(backoff.expo, conn_err_pg, max_tries=5)
+    async def permission_from_role(self, permissions_id: str, role_id: str):
+        role = await self.storage.get(Roles, role_id)
+        permissions = await self.storage.get(Permissions, permissions_id)
+        if role is not None and permissions is not None:
+            if permissions.role_id == role.id:
+                permissions.role = None
+                await self.storage.commit()
+                return True
+            else:
+                return False
+        else:
+            return False
+
+    @backoff.on_exception(backoff.expo, conn_err_pg, max_tries=5)
+    async def set_user_role(self, user_id, role_id):
+        user: User = await self.storage.get(User, user_id)
+        if user is not None:
+            user.role_id = role_id
+            self.storage.add(user)
+            await self.storage.commit()
+            await self.storage.refresh(user)
+            return user
+        else:
+            return None
+
+    @backoff.on_exception(backoff.expo, conn_err_pg, max_tries=5)
+    async def get_user_role(self, user_id):
+        user = await self.storage.get(User, user_id)
+        if user is not None and user.role_id is not None:
+            stmt = select(Roles).options(selectinload(Roles.permissions)).where(Roles.id == user.role_id)
+            result = await self.storage.execute(stmt)
+            role = result.fetchone()
+            if role is not None:
+                return role
+            else:
+                return None
+        else:
+            return None
+
+    @backoff.on_exception(backoff.expo, conn_err_pg, max_tries=5)
+    async def del_user_role(self, user_id):
+        user: User = await self.storage.get(User, user_id)
+        if user is not None:
+            user.role_id = None
+            self.storage.add(user)
+            await self.storage.commit()
+            await self.storage.refresh(user)
+            return True
+        else:
+            return False
 
     @backoff.on_exception(backoff.expo, conn_err_redis, max_tries=5)
     async def _put_to_cache(

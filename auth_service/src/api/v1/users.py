@@ -1,8 +1,6 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, status, HTTPException, Request, Response
-from pydantic import TypeAdapter
-from asyncpg.exceptions import UniqueViolationError
-
+from pydantic_core import ValidationError
 
 from api.v1.schemas.auth import (
     AuthenticationSchema,
@@ -10,8 +8,10 @@ from api.v1.schemas.auth import (
     AuthenticationParams,
     AuthenticationData,
     TokenParams,
+
 )
-from api.v1.schemas.users import UserParams, UserEditParams
+from api.v1.schemas.users import UserParams, UserSchema, UserEditParams
+from api.v1.schemas.roles import PermissionsParams
 from services.user import UserService, get_user_service
 from services.auth import AuthService, get_auth_service
 
@@ -22,7 +22,7 @@ def get_tokens_from_cookie(request: Request) -> TokenParams:
     try:
         tokens = TokenParams(access_token=request.cookies.get("access_token"),
                              refresh_token=request.cookies.get("refresh_token"))
-    except:
+    except ValidationError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail='Tokens is not found')
     return tokens
@@ -31,7 +31,6 @@ def get_tokens_from_cookie(request: Request) -> TokenParams:
 # /api/v1/users/login
 @router.post(
     "/login",
-    response_model=TokenSchema,
     status_code=status.HTTP_200_OK,
     summary="Авторизация пользователя",
     description="Авторизцаия пользвателя по логину и паролю",
@@ -43,7 +42,7 @@ async def login(
     user_params: Annotated[AuthenticationParams, Depends()],
     user_service: UserService = Depends(get_user_service),
     auth_service: AuthService = Depends(get_auth_service),
-) -> TokenSchema:
+) -> None:
     user_agent = request.headers.get("user-agent")
     tokens_resp, user = await user_service.login(user_params.login,
                                                  user_params.password)
@@ -80,7 +79,6 @@ async def user_registration(
                             detail='This login already exists')
 
 
-
 # /api/v1/users/change_user_info
 @router.put(
     "/change_user_info",
@@ -105,7 +103,6 @@ async def change_user_info(
                       last_name=change_user.last_name)
 
 
-
 # /api/v1/users/logout
 @router.post(
     "/logout",
@@ -120,7 +117,6 @@ async def logout(request: Request,
     tokens = get_tokens_from_cookie(request)
     return await user_service.logout(access_token=tokens.access_token,
                                      refresh_token=tokens.refresh_token)
-
 
 
 # /api/v1/users/refresh_token
@@ -147,9 +143,9 @@ async def refresh_token(
     return response
 
 
-# /api/v1/users/login_history/{user_id}
+# /api/v1/users/login_history
 @router.post(
-    "/login_history/{user_id}",
+    "/login_history",
     response_model=list[AuthenticationSchema],
     status_code=status.HTTP_200_OK,
     summary="История авторизаций",
@@ -159,12 +155,11 @@ async def refresh_token(
 )
 async def get_login_history(
     request: Request,
-    user_id: str,
     auth_service: Annotated[AuthService, Depends(get_auth_service)]
 ) -> list[AuthenticationSchema]:
 
     tokens = get_tokens_from_cookie(request)
-    auth_data = await auth_service.login_history(user_id, tokens.access_token)
+    auth_data = await auth_service.login_history(tokens.access_token)
 
     list_auth_scheme = []
     for item in auth_data:
@@ -175,3 +170,21 @@ async def get_login_history(
         list_auth_scheme.append(auth_scheme)
     return list_auth_scheme
 
+
+# /api/v1/users/check_permission
+@router.post(
+    "/check_permission",
+    response_model=bool,
+    status_code=status.HTTP_200_OK,
+    summary="Проверка разрешений пользователя",
+    description="Проверка разрешения опредленных действий пользователя",
+    response_description="Результат проверки: успешно или нет",
+    tags=["Пользователи"],
+)
+async def check_permission(
+    request: Request,
+    permission_params: Annotated[PermissionsParams, Depends()],
+    user_service: UserService = Depends(get_user_service)
+) -> bool:
+    tokens = get_tokens_from_cookie(request)
+    return await user_service.check_permissions(tokens.access_token, permission_params.name)
