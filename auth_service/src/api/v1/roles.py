@@ -121,11 +121,11 @@ async def list_roles(
 )
 async def add_user_role(
     user_id: str,
-    role_id: str,
+    id_role: str,
     role_service: Annotated[RoleService, Depends(get_role_service)]
 ) -> UserRoleSchema:
-    await role_service.assign_role(user_id, role_id)
-    return UserRoleSchema(role_id=role_id,
+    await role_service.assign_role(user_id, id_role)
+    return UserRoleSchema(role_id=id_role,
                           user_id=user_id)
 
 
