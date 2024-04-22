@@ -19,17 +19,17 @@ def pytest_namespace():
 
 
 @pytest.mark.parametrize(
-        "query_data, expected_answer",
-        [
-            (
-                {"login": new_login, "password": new_user_pass},
-                {"status": HTTPStatus.OK}
-            ),
-            (
-                {"login": new_login, "password": "test"},
-                {"status": HTTPStatus.BAD_REQUEST}
-            )
-        ]
+    "query_data, expected_answer",
+    [
+        (
+            {"login": new_login, "password": new_user_pass},
+            {"status": HTTPStatus.OK}
+        ),
+        (
+            {"login": new_login, "password": "test"},
+            {"status": HTTPStatus.BAD_REQUEST}
+        )
+    ]
 )
 @pytest.mark.order(1)
 @pytest.mark.asyncio
@@ -50,21 +50,21 @@ async def test_registration_user(make_post_request,
 
 
 @pytest.mark.parametrize(
-        "query_data, expected_answer",
-        [
-            (
-                {"login": new_login, "password": "testtest"},
-                {"status": HTTPStatus.FORBIDDEN}
-            ),
-            (
-                {"login": new_login, "password": new_user_pass},
-                {"status": HTTPStatus.OK}
-            ),
-            (
-                {"login": str(uuid.uuid4()), "password": "user"},
-                {"status": HTTPStatus.NOT_FOUND}
-            )
-        ]
+    "query_data, expected_answer",
+    [
+        (
+            {"login": new_login, "password": "testtest"},
+            {"status": HTTPStatus.FORBIDDEN}
+        ),
+        (
+            {"login": new_login, "password": new_user_pass},
+            {"status": HTTPStatus.OK}
+        ),
+        (
+            {"login": str(uuid.uuid4()), "password": "user"},
+            {"status": HTTPStatus.NOT_FOUND}
+        )
+    ]
 )
 @pytest.mark.order(2)
 @pytest.mark.asyncio
@@ -94,16 +94,16 @@ async def test_login_user(make_post_request, query_data, expected_answer):
 
 
 @pytest.mark.parametrize(
-        "query_data",
-        [
-            (
-                {"first_name": "ivan",
-                 "last_name": "petrov",
-                 "login": str(uuid.uuid4()),
-                 "password": "user55"
-                 }
-            ),
-        ]
+    "query_data",
+    [
+        (
+            {"first_name": "ivan",
+             "last_name": "petrov",
+             "login": str(uuid.uuid4()),
+             "password": "user55"
+             }
+        ),
+    ]
 )
 @pytest.mark.order(3)
 @pytest.mark.asyncio
@@ -181,9 +181,9 @@ async def test_logout(make_post_request):
 
     # создаем новое разрешение
     query_data = {"type": str(uuid.uuid4())}
-    url_role = SERVICE_URL +'/api/v1/roles/create'
+    url_role = SERVICE_URL + '/api/v1/roles/create'
     response_role = await make_post_request(url_role, query_data, cookie=cookies)
-    url_permission = SERVICE_URL +"/api/v1/permissions/create_permission"
+    url_permission = SERVICE_URL + "/api/v1/permissions/create_permission"
     query_data = {"name": permission_name}
     response_permission = await make_post_request(url_permission, query_data, cookie=cookies)
     query_data = {"role_id": response_role["uuid"],
@@ -192,7 +192,7 @@ async def test_logout(make_post_request):
     response_role_permission = await make_post_request(url_role_permission, query_data, cookie=cookies)
     url = SERVICE_URL + f"/api/v1/roles/set/{pytest.new_user_id}/{response_role['uuid']}"
     response = await make_post_request(url_role_permission, query_data, cookie=cookies)
-    
+
     # проверяем только что выданное разрешение
     query_data = {"name": permission_name}
     response = await make_post_request(url, query_data, cookie=cookies)

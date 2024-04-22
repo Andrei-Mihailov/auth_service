@@ -3,7 +3,8 @@ from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 
-load_dotenv(".dev.env") 
+load_dotenv(".tests.env")
+
 
 class TestSettings(BaseSettings):
     SERVICE_HOST: str = Field(default={env.get("SERVICE_HOST")})

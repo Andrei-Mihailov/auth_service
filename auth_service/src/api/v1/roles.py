@@ -39,9 +39,8 @@ async def create(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail='This role already exists')
 
+
 # /api/v1/roles/{id_role}
-
-
 @router.delete(
     "/{id_role}",
     status_code=status.HTTP_200_OK,
@@ -57,7 +56,7 @@ async def delete(
     return None
 
 
-# /api/v1/roles/create/{id_role}
+# /api/v1/roles/change/{id_role}
 @router.put(
     "/change/{id_role}",
     response_model=RolesSchema,

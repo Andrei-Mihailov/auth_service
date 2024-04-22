@@ -1,12 +1,15 @@
 import pytest_asyncio
 from httpx import AsyncClient
 
-from src.main import app
+from ..settings import test_settings
+
+
+SERVICE_URL = test_settings.SERVISE_URL
 
 
 @pytest_asyncio.fixture
-async def client_fixture(app_with_overridden_redis, app_with_overridden_db):
-    async with AsyncClient(app=app, base_url="http://test") as client:
+async def client_fixture():
+    async with AsyncClient(base_url=SERVICE_URL) as client:
         yield client
 
 
