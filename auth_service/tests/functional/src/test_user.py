@@ -136,6 +136,7 @@ async def test_refresh_token(make_post_request):
 @pytest.mark.order(5)
 @pytest.mark.asyncio
 async def test_login_history(make_post_request):
+    global cookies_outside
     url = SERVICE_URL + "/api/v1/users/login_history"
     # проверяем запрос без куки
     response = await make_post_request(url)
@@ -154,10 +155,12 @@ async def test_login_history(make_post_request):
 
 @pytest.mark.order(6)
 @pytest.mark.asyncio
-async def test_logout(make_post_request):
+async def test_check_permission(make_post_request):
     url = SERVICE_URL + "/api/v1/users/check_permission"
+    permission_name = str(uuid.uuid4())
+    query_data = {"name": permission_name}
     # проверяем запрос без куки
-    response = await make_post_request(url)
+    response = await make_post_request(url, query_data)
     assert response.status == HTTPStatus.NOT_FOUND
     # проверяем с куками автризованного пользователя
     cookies = {
@@ -165,39 +168,36 @@ async def test_logout(make_post_request):
         "refresh_token": pytest.refresh_token,
     }
     # проверяем новое разрешение
-    permission_name = str(uuid.uuid4())
-    query_data = {"name": permission_name}
     response = await make_post_request(url, query_data, cookie=cookies)
     body = await response.json()
-    assert body == "false"
+    assert body is False
+
+    # создаем новую роль
+    query_data = {"type": str(uuid.uuid4())}
+    url_role = SERVICE_URL + '/api/v1/roles/create'
+    response = await make_post_request(url_role, query_data, cookie=cookies)
+    response_role = await response.json()
 
     # создаем новое разрешение
-    query_data = {"type": str(uuid.uuid4())}
-    url_role = SERVICE_URL + "/api/v1/roles/create"
-    response_role = await make_post_request(url_role, query_data, cookie=cookies)
     url_permission = SERVICE_URL + "/api/v1/permissions/create_permission"
     query_data = {"name": permission_name}
-    response_permission = await make_post_request(
-        url_permission, query_data, cookie=cookies
-    )
-    query_data = {
-        "role_id": response_role["uuid"],
-        "permissions_id": response_permission["uuid"],
-    }
-    url_role_permission = SERVICE_URL + "/api/v1/permissions/assign_permission_to_role"
-    response_role_permission = await make_post_request(
-        url_role_permission, query_data, cookie=cookies
-    )
-    url = (
-        SERVICE_URL + f"/api/v1/roles/set/{pytest.new_user_id}/{response_role['uuid']}"
-    )
-    response = await make_post_request(url_role_permission, query_data, cookie=cookies)
+    response = await make_post_request(url_permission, query_data, cookie=cookies)
+    response_permission = await response.json()
 
+    # назначение прав роли
+    query_data = {"role_id": response_role["uuid"],
+                  "permissions_id": response_permission["uuid"]}
+    url_role_permission = SERVICE_URL + "/api/v1/permissions/assign_permission_to_role"
+    response = await make_post_request(url_role_permission, query_data, cookie=cookies)
+    # присвоение роли пользователю
+    url = SERVICE_URL + f"/api/v1/roles/set/{pytest.new_user_id}/{response_role['uuid']}"
+    response = await make_post_request(url, cookie=cookies)
     # проверяем только что выданное разрешение
+    url = SERVICE_URL + "/api/v1/users/check_permission"
     query_data = {"name": permission_name}
     response = await make_post_request(url, query_data, cookie=cookies)
     body = await response.json()
-    assert body == "true"
+    assert body == True
 
 
 @pytest.mark.order(7)

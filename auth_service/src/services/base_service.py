@@ -4,6 +4,7 @@ import json
 from abc import ABC
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
+from sqlalchemy.exc import DBAPIError
 from fastapi.encoders import jsonable_encoder
 from typing import Union
 
@@ -19,25 +20,6 @@ from services.utils import decode_jwt
 
 class AbstractBaseService(ABC):
     pass
-    # @abstractmethod
-    # async def get_by_id(self, id):
-    #     pass
-
-    # @abstractmethod
-    # async def _get_from_db(self, id):
-    #     pass
-
-    # @abstractmethod
-    # async def _get_from_cache(self, key):
-    #     pass
-
-    # @abstractmethod
-    # async def _put_to_cache(self, key, value, expire):
-    #     pass
-
-    # @abstractmethod
-    # async def execute_query_storage(self, query):
-    #     pass
 
 
 class BaseService(AbstractBaseService):
@@ -82,6 +64,8 @@ class BaseService(AbstractBaseService):
             await self.storage.commit()
             await self.storage.refresh(instance)
             return instance
+        except DBAPIError:
+            return None
         except Exception as e:
             print(f"Ошибка при обновлении объекта: {e}")
             return None
@@ -109,13 +93,16 @@ class BaseService(AbstractBaseService):
 
     @backoff.on_exception(backoff.expo, conn_err_pg, max_tries=5)
     async def del_instance_by_id(self, id: str):
-        instance = await self.storage.get(self.model, id)
-        if instance:
-            await self.storage.delete(instance)
-            await self.storage.commit()
-            return True
-        else:
-            return False
+        try:
+            instance = await self.storage.get(self.model, id)
+            if instance:
+                await self.storage.delete(instance)
+                await self.storage.commit()
+                return True
+            else:
+                return False
+        except DBAPIError:
+            raise DBAPIError
 
     @backoff.on_exception(backoff.expo, conn_err_pg, max_tries=5)
     async def get_all_instance(self):
@@ -165,7 +152,8 @@ class BaseService(AbstractBaseService):
     @backoff.on_exception(backoff.expo, conn_err_pg, max_tries=5)
     async def set_user_role(self, user_id, role_id):
         user: User = await self.storage.get(User, user_id)
-        if user is not None:
+        role = await self.storage.get(Roles, role_id)
+        if user is not None and role is not None:
             user.role_id = role_id
             self.storage.add(user)
             await self.storage.commit()

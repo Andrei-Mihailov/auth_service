@@ -45,7 +45,11 @@ async def assign_permission_to_role(
     permission_params: Annotated[RolePermissionsParams, Depends()],
     permission_service: PermissionService = Depends(get_permission_service),
 ) -> bool:
-    return await permission_service.assign_permission_to_role(permission_params)
+    result = await permission_service.assign_permission_to_role(permission_params)
+    if result:
+        return True
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 
 # /api/v1/permissions/remove_permission_from_role
@@ -62,4 +66,8 @@ async def remove_permission_from_role(
     permission_params: Annotated[RolePermissionsParams, Depends()],
     permission_service: PermissionService = Depends(get_permission_service),
 ) -> bool:
-    return await permission_service.remove_permission_from_role(permission_params)
+    result = await permission_service.remove_permission_from_role(permission_params)
+    if result:
+        return True
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

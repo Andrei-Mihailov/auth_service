@@ -52,8 +52,11 @@ async def delete(
     id_role: str,
     role_service: Annotated[RoleService, Depends(get_role_service)]
 ) -> None:
-    await role_service.delete(id_role)
-    return None
+    result = await role_service.delete(id_role)
+    if result:
+        return None
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 
 # /api/v1/roles/change/{id_role}
@@ -72,8 +75,11 @@ async def change(
     role_service: Annotated[RoleService, Depends(get_role_service)],
 ) -> RolesSchema:
     role = await role_service.update(id_role, role_params)
-    return RolesSchema(uuid=role.id,
-                       type=role.type)
+    if role is not None:
+        return RolesSchema(uuid=role.id,
+                           type=role.type)
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 
 # /api/v1/roles/list
@@ -108,7 +114,7 @@ async def list_roles(
     return list_roles_scheme
 
 
-# /api/v1/roles/set/{id_role}/{user_id}
+# /api/v1/roles/set/{user_id}/{id_role}
 @router.post(
     "/set/{user_id}/{id_role}",
     response_model=UserRoleSchema,
@@ -123,9 +129,12 @@ async def add_user_role(
     id_role: str,
     role_service: Annotated[RoleService, Depends(get_role_service)]
 ) -> UserRoleSchema:
-    await role_service.assign_role(user_id, id_role)
-    return UserRoleSchema(role_id=id_role,
-                          user_id=user_id)
+    result = await role_service.assign_role(user_id, id_role)
+    if result is not None:
+        return UserRoleSchema(id_role=id_role,
+                              user_id=user_id)
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 
 # /api/v1/roles/delete/{user_id}

@@ -4,7 +4,7 @@ from typing import Union
 
 
 class UserRoleSchema(BaseModel):
-    role_id: RoleID
+    id_role: RoleID
     user_id: UserID
 
 
@@ -29,7 +29,7 @@ class RoleParams(BaseModel):
 
 
 class RoleEditParams(BaseModel):
-    type: str = Field(description="тип", default=None)
+    type: str
 
 
 class PermissionsParams(BaseModel):

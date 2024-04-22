@@ -37,8 +37,7 @@ class RoleService(BaseService):
 
     async def delete(self, role_id: str) -> Roles:
         """Удаление роли."""
-        await self.del_instance_by_id(role_id)
-        return True
+        return await self.del_instance_by_id(role_id)
 
     async def elements(self):
         return await self.get_all_instance()
