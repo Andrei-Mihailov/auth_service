@@ -16,6 +16,7 @@ from db.postgres_db import AsyncSession
 from models.entity import User, Authentication, Roles, Permissions
 from core.config import settings
 from services.utils import decode_jwt
+from models.value_objects import Role_names
 
 
 class AbstractBaseService(ABC):
@@ -286,7 +287,7 @@ class BaseService(AbstractBaseService):
         user_role = self.get_user_role(user_id)
 
         if has_permission == 1:  # admin
-            if user_role not in ["admin", "superuser"]:
+            if user_role not in [Role_names.admin, Role_names.superuser]:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Admins can't deassign for other admins or superuser.")
