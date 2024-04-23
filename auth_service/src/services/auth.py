@@ -4,11 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.entity import Authentication
 from .base_service import BaseService
-from .utils import (
-    decode_jwt,
-    check_date_and_type_token,
-    ACCESS_TOKEN_TYPE
-)
+from .utils import decode_jwt, check_date_and_type_token, ACCESS_TOKEN_TYPE
 
 from db.postgres_db import get_session
 from db.redis_db import RedisCache, get_redis
@@ -23,10 +19,7 @@ class AuthService(BaseService):
         # добавление в бд pg данных об аутентификации модель Authentication
         await self.create_new_instance(auth_params)
 
-    async def login_history(
-        self,
-        access_token: str
-    ) -> list[Authentication]:
+    async def login_history(self, access_token: str) -> list[Authentication]:
 
         payload = decode_jwt(jwt_token=access_token)
         user_uuid = payload.get("sub")
@@ -42,8 +35,7 @@ class AuthService(BaseService):
                 return auths_list
             else:
                 raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="uncorrect token"
+                    status_code=status.HTTP_403_FORBIDDEN, detail="uncorrect token"
                 )
 
 

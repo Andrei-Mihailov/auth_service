@@ -5,7 +5,7 @@ from abc import ABC
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import DBAPIError
-from fastapi.encoders import jsonable_encoder
+from fastapi.encoders import jsonable_encoder, HTTPException, status
 from typing import Union
 
 
@@ -16,6 +16,7 @@ from db.postgres_db import AsyncSession
 from models.entity import User, Authentication, Roles, Permissions
 from core.config import settings
 from services.utils import decode_jwt
+from models.value_objects import Role_names
 
 
 class AbstractBaseService(ABC):
@@ -166,7 +167,11 @@ class BaseService(AbstractBaseService):
     async def get_user_role(self, user_id):
         user = await self.storage.get(User, user_id)
         if user is not None and user.role_id is not None:
-            stmt = select(Roles).options(selectinload(Roles.permissions)).where(Roles.id == user.role_id)
+            stmt = (
+                select(Roles)
+                .options(selectinload(Roles.permissions))
+                .where(Roles.id == user.role_id)
+            )
             result = await self.storage.execute(stmt)
             role = result.fetchone()
             if role is not None:
@@ -256,3 +261,46 @@ class BaseService(AbstractBaseService):
         payload = decode_jwt(jwt_token=token)
         key = "black_list:" + payload.get("self_uuid")
         return await self._get_from_cache(key)
+
+    async def is_admin(self, payload: dict) -> bool:
+        """Проверка, является ли пользователь администратором, используя расшифрованный payload."""
+        user_is_admin = payload.get("is_admin")
+        return user_is_admin
+
+    async def is_superuser(self, payload: dict) -> bool:
+        """Проверка, является ли пользователь суперпользователем, используя расшифрованный payload."""
+        user_is_superuser = payload.get("is_superuser")
+        return user_is_superuser
+
+    async def has_permission(self, access_token: str) -> bool:
+        """Проверка разрешений пользователя на основе токена."""
+        payload = decode_jwt(jwt_token=access_token)
+        if self.is_admin(payload):
+            return True
+        else:
+            return False
+
+    async def allow_for_change(self, access_token: str, user_id):
+        payload = decode_jwt(jwt_token=access_token)
+        check_superuser = await self.is_superuser(payload)
+
+        if check_superuser:
+            return True
+
+        has_permission = await self.has_permission(access_token)
+        if has_permission:
+            user_role = self.get_user_role(user_id)
+
+            if user_role == Role_names.admin :
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Admins can't deassign for other admins or superuser.")
+
+            else:
+                return True
+
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="You are not authorized to perform this action.",
+            )

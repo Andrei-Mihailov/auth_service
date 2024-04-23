@@ -6,6 +6,8 @@ from fastapi import HTTPException, status
 
 from core.config import settings
 from models.user import User
+from base_service import get_user_role
+from models.value_objects import Role_names
 
 ACCESS_TOKEN_TYPE = "access"
 REFRESH_TOKEN_TYPE = "refresh"
@@ -24,12 +26,14 @@ def create_jwt(token_type: str, token_data: dict, expire_minutes: int) -> str:
     return encode_jwt(jwt_payload)
 
 
-def create_access_token(user: User):
+def create_access_token(user: User, user_role: Role_names = Role_names.user):
     # в теле токена хранится UUID пользователя, его роли и UUID самого токена
     payload = {
         "sub": str(user.id),  # userid
         "role_id": str(user.role_id) if user.role_id else None,
         "self_uuid": str(uuid.uuid4()),
+        "is_admin": user_role == Role_names.admin,
+        "is_superuser": user.is_superuser,
     }
     return create_jwt(
         ACCESS_TOKEN_TYPE, payload, settings.auth_jwt.access_token_expire_minutes
@@ -74,7 +78,7 @@ def decode_jwt(
     except jwt.exceptions.ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token has expired, refresh token"
+            detail="Token has expired, refresh token",
         )
     return decoded
 
@@ -91,8 +95,7 @@ def validate_password(hashed_password: bytes, password: str) -> bool:
         return settings.pwd_context.verify(password, hashed_password)
     except ValueError:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Incorrect password"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Incorrect password"
         )
 
 
@@ -110,7 +113,6 @@ def check_date_and_type_token(payload: dict, type_token_need: str) -> bool:
     if now > exp:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Token has expired, refresh token"
-
+            detail="Token has expired, refresh token",
         )
     return True

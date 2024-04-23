@@ -16,10 +16,12 @@ from db import redis_db
 from core.config import settings
 
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     redis_db.redis = Redis(host=settings.redis_host, port=settings.redis_port)
     from models.entity import Permissions, Roles, User, Authentication
+
     await postgres_db.create_database()
     yield
     await redis_db.redis.close()
@@ -68,30 +70,38 @@ def async_cmd(func):
     @ft.wraps(func)
     def wrapper(*args, **kwargs):
         return asyncio.run(func(*args, **kwargs))
+
     return wrapper
 
 
 @click.command()
-@click.option('--username', default='test', prompt='Enter username', help='Username for the superuser')
-@click.option('--password', default='test', prompt='Enter password', help='Password for the superuser')
+@click.option(
+    "--username",
+    default="test",
+    prompt="Enter username",
+    help="Username for the superuser",
+)
+@click.option(
+    "--password",
+    default="test",
+    prompt="Enter password",
+    help="Password for the superuser",
+)
 @async_cmd
 async def create_superuser(username, password):
     from models.entity import User
     from sqlalchemy.future import select
+
     await postgres_db.create_database()
     async with postgres_db.async_session() as session:
         result = await session.execute(select(User).filter(User.login == username))
         existing_user = result.scalars().first()
         if existing_user:
-            click.echo('User with this login already exists!')
+            click.echo("User with this login already exists!")
             return
 
         # Создаем суперпользователя
-        superuser_data = {
-            "login": username,
-            "password": password,
-            "is_superuser": True
-        }
+        superuser_data = {"login": username, "password": password, "is_superuser": True}
         instance = User(**superuser_data)
         session.add(instance)
         try:
@@ -100,7 +110,8 @@ async def create_superuser(username, password):
             print(f"Ошибка при создании объекта: {e}")
             return None
 
-        click.echo(f'Superuser {username} created successfully!')
+        click.echo(f"Superuser {username} created successfully!")
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

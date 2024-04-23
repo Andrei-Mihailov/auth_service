@@ -30,7 +30,9 @@ class Permissions(Base):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
-    role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"), default=None, nullable=True)
+    role_id: Mapped[int] = mapped_column(
+        ForeignKey("roles.id"), default=None, nullable=True
+    )
     role: Mapped[Roles] = relationship("Roles", back_populates="permissions")
 
 
@@ -55,7 +57,12 @@ class User(Base):
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
 
     def __init__(
-        self, login: str, password: str, first_name: str = None, last_name: str = None, is_superuser: bool = False
+        self,
+        login: str,
+        password: str,
+        first_name: str = None,
+        last_name: str = None,
+        is_superuser: bool = False,
     ) -> None:
         self.login = login
         self.password = hash_password(password)

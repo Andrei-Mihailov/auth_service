@@ -174,7 +174,7 @@ async def test_check_permission(make_post_request):
 
     # создаем новую роль
     query_data = {"type": str(uuid.uuid4())}
-    url_role = SERVICE_URL + '/api/v1/roles/create'
+    url_role = SERVICE_URL + "/api/v1/roles/create"
     response = await make_post_request(url_role, query_data, cookie=cookies)
     response_role = await response.json()
 
@@ -185,12 +185,16 @@ async def test_check_permission(make_post_request):
     response_permission = await response.json()
 
     # назначение прав роли
-    query_data = {"role_id": response_role["uuid"],
-                  "permissions_id": response_permission["uuid"]}
+    query_data = {
+        "role_id": response_role["uuid"],
+        "permissions_id": response_permission["uuid"],
+    }
     url_role_permission = SERVICE_URL + "/api/v1/permissions/assign_permission_to_role"
     response = await make_post_request(url_role_permission, query_data, cookie=cookies)
     # присвоение роли пользователю
-    url = SERVICE_URL + f"/api/v1/roles/set/{pytest.new_user_id}/{response_role['uuid']}"
+    url = (
+        SERVICE_URL + f"/api/v1/roles/set/{pytest.new_user_id}/{response_role['uuid']}"
+    )
     response = await make_post_request(url, cookie=cookies)
     # проверяем только что выданное разрешение
     url = SERVICE_URL + "/api/v1/users/check_permission"

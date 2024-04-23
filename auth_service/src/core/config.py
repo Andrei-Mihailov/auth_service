@@ -16,7 +16,7 @@ class AuthJWT(BaseModel):
     secret_key: str = "secret-key"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 20 * 60
-    refresh_token_expire_minutes: int = 30 * 24 * 60 * 60 # 30 дней
+    refresh_token_expire_minutes: int = 30 * 24 * 60 * 60  # 30 дней
 
 
 class Settings(BaseSettings):
