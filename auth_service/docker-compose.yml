@@ -18,8 +18,8 @@ services:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-    expose:
-      - "${DB_PORT}"
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
     volumes:
       - pgdbauth:/var/lib/postgresql@13/data/
     healthcheck:
@@ -30,7 +30,7 @@ services:
 
   app:
     build: .
-    command: python main.py
+    command: python src/main.py
     container_name: solution-auth
     depends_on:
       redis:

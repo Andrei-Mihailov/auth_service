@@ -139,16 +139,23 @@ class UserService(BaseService):
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="user not found",
                 )
-            try:
-                user_role = await self.get_user_role(user_uuid)
-                user_permissions = []
-                for perm in user_role._data[0].permissions:
-                    user_permissions.append(perm.name)
+            # проверка access токена в блэк листе redis
+            if not await self.get_from_black_list(access_token):
+                try:
+                    user_role = await self.get_user_role(user_uuid)
+                    user_permissions = []
+                    for perm in user_role._data[0].permissions:
+                        user_permissions.append(perm.name)
 
-                if required_permissions not in user_permissions:
+                    if required_permissions not in user_permissions:
+                        return False
+                except AttributeError:
                     return False
-            except AttributeError:
-                return False
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="uncorrect token"
+                )
 
         return True
 
