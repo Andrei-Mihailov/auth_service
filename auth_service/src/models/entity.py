@@ -20,6 +20,7 @@ class Roles(Base):
     permissions: Mapped[list["Permissions"]] = relationship(
         "Permissions", back_populates="role"
     )
+    users: Mapped[list["User"]] = relationship("User", back_populates="role")
 
 
 class Permissions(Base):
@@ -50,6 +51,7 @@ class User(Base):
     created_at: Mapped[DateTime] = mapped_column(DateTime, default=datetime.now)
     active: Mapped[Boolean] = mapped_column(Boolean, default=True)
     role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"), default=None, nullable=True)
+    role: Mapped[Roles] = relationship("Role", back_populates="users")
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
 
     def __init__(
