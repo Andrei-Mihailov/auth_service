@@ -6,9 +6,11 @@ from fastapi import HTTPException, status
 
 from core.config import settings
 from models.user import User
+from base_service import get_user_role
 
 ACCESS_TOKEN_TYPE = "access"
 REFRESH_TOKEN_TYPE = "refresh"
+HAS_SUPERUSER = False
 
 
 def create_jwt(token_type: str, token_data: dict, expire_minutes: int) -> str:
@@ -26,12 +28,13 @@ def create_jwt(token_type: str, token_data: dict, expire_minutes: int) -> str:
 
 def create_access_token(user: User):
     # в теле токена хранится UUID пользователя, его роли и UUID самого токена
+    role = get_user_role(user.id)
     payload = {
         "sub": str(user.id),  # userid
         "role_id": str(user.role_id) if user.role_id else None,
         "self_uuid": str(uuid.uuid4()),
-        "is_admin": bool(user.is_admin),
-        "is_superuser": bool(user.is_superuser),
+        "is_admin": role == 'admin',
+        "is_superuser": user.is_superuser,
     }
     return create_jwt(
         ACCESS_TOKEN_TYPE, payload, settings.auth_jwt.access_token_expire_minutes

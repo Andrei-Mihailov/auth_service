@@ -7,9 +7,9 @@ from api.v1.schemas.auth import (
 
 def get_tokens_from_cookie(request: Request) -> TokenParams:
     try:
-        tokens = TokenParams(access_token=request.cookies.get("access_token"))
+        access_token = request.cookies.get("access_token")
     except ValidationError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Tokens is not found"
         )
-    return tokens
+    return access_token

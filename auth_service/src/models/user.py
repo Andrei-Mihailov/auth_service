@@ -15,8 +15,6 @@ class User(BaseModel):
     password: bytes
     created_at: datetime = datetime.now
     active: bool = True
-    is_admin: bool = False
-    is_superuser: bool = False
 
     class Config:
         orm_mode = True

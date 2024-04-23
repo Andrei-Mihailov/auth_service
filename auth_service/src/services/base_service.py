@@ -286,16 +286,10 @@ class BaseService(AbstractBaseService):
         user_role = self.get_user_role(user_id)
 
         if has_permission == 1:  # admin
-            if user_role == "admin":
+            if user_role not in ["admin", "superuser"]:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Admins can't deassign for other admins.",
-                )
-            elif user_role == "superuser":
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="You can't deassign for superuser.",
-                )
+                    detail="Admins can't deassign for other admins or superuser.")
             else:
                 return True
 
