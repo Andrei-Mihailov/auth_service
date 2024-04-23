@@ -37,7 +37,7 @@ class RoleService(BaseService):
             )
 
     async def update(self, role_id: str, update_data: dict, access_token: str) -> Roles:
-        if has_permision(access_token) == 2 or has_permision(access_token) == 1:
+        if allow_for_change(access_token):
             return await self.change_instance_data(role_id, update_data)
         else:
             raise HTTPException(
@@ -47,7 +47,7 @@ class RoleService(BaseService):
 
     async def delete(self, role_id: str, access_token: str) -> Roles:
         """Удаление роли."""
-        if has_permision(access_token) == 2 or has_permision(access_token) == 1:
+        if allow_for_change(access_token):
             return await self.del_instance_by_id(role_id)
         else:
             raise HTTPException(

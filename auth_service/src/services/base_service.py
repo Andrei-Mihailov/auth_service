@@ -277,8 +277,6 @@ class BaseService(AbstractBaseService):
         payload = decode_jwt(jwt_token=access_token)
         if self.is_admin(payload):
             return True
-        elif self.is_superuser(payload):
-            return True
         else:
             return False
 

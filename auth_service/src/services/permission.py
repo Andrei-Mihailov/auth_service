@@ -5,7 +5,7 @@ from models.entity import Permissions
 from .base_service import BaseService
 from db.redis_db import RedisCache, get_redis
 from db.postgres_db import AsyncSession, get_session
-from service.base_service import has_permision
+from service.base_service import has_permision, allow_for_change
 
 
 class PermissionService(BaseService):
@@ -14,7 +14,7 @@ class PermissionService(BaseService):
         self.model = Permissions
 
     async def create_permission(self, params: dict, access_token: str) -> Permissions:
-        if has_permision(access_token) == 2 or has_permision(access_token) == 1:
+        if allow_for_change(access_token):
             permission = await self.create_new_instance(params)
             return permission
         else:
@@ -39,7 +39,7 @@ class PermissionService(BaseService):
             )
 
     async def remove_permission_from_role(self, data: dict, access_token: str) -> bool:
-        if has_permision(access_token) == 2 or has_permision(access_token) == 1:
+        if allow_for_change(access_token):
             return await self.permission_from_role(
                 str(data.permissions_id), str(data.role_id)
             )
