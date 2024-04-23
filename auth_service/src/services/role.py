@@ -10,7 +10,7 @@ from models.user import User
 from db.postgres_db import AsyncSession, get_session
 from db.redis_db import RedisCache, get_redis
 
-from service.base_service import allow_for_change, get_user_role, has_permision
+from service.base_service import allow_for_change, has_permision
 
 
 class RoleService(BaseService):

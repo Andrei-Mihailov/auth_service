@@ -1,7 +1,7 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, status, HTTPException, Request
 from sqlalchemy.exc import MissingGreenlet
-from pydantic_core import ValidationError
+from service import get_tokens_from_cookie
 
 from api.v1.schemas.roles import (
     RolesSchema,
@@ -12,24 +12,10 @@ from api.v1.schemas.roles import (
     RolesPermissionsSchema,
 )
 
-from api.v1.schemas.auth import (
-    TokenParams,
-)
-
 
 from services.role import RoleService, get_role_service
 
 router = APIRouter()
-
-
-def get_tokens_from_cookie(request: Request) -> TokenParams:
-    try:
-        tokens = TokenParams(access_token=request.cookies.get("access_token"))
-    except ValidationError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Tokens is not found"
-        )
-    return tokens
 
 
 # /api/v1/roles/create
