@@ -8,7 +8,6 @@ from api.v1.schemas.auth import (
     AuthenticationParams,
     AuthenticationData,
     TokenParams,
-
 )
 from api.v1.schemas.users import UserParams, UserSchema, UserEditParams
 from api.v1.schemas.roles import PermissionsParams
@@ -20,11 +19,14 @@ router = APIRouter()
 
 def get_tokens_from_cookie(request: Request) -> TokenParams:
     try:
-        tokens = TokenParams(access_token=request.cookies.get("access_token"),
-                             refresh_token=request.cookies.get("refresh_token"))
+        tokens = TokenParams(
+            access_token=request.cookies.get("access_token"),
+            refresh_token=request.cookies.get("refresh_token"),
+        )
     except ValidationError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail='Tokens is not found')
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Tokens is not found"
+        )
     return tokens
 
 
@@ -44,8 +46,9 @@ async def login(
     auth_service: AuthService = Depends(get_auth_service),
 ) -> None:
     user_agent = request.headers.get("user-agent")
-    tokens_resp, user = await user_service.login(user_params.login,
-                                                 user_params.password)
+    tokens_resp, user = await user_service.login(
+        user_params.login, user_params.password
+    )
     user_agent_data = AuthenticationData(user_agent=user_agent, user_id=user.id)
     await auth_service.new_auth(user_agent_data)
     response = Response()
@@ -66,17 +69,20 @@ async def login(
 )
 async def user_registration(
     user_params: Annotated[UserParams, Depends()],
-    user_service: UserService = Depends(get_user_service)
+    user_service: UserService = Depends(get_user_service),
 ) -> UserSchema:
     user = await user_service.create_user(user_params)
     if user is not None:
-        return UserSchema(uuid=user.id,
-                          login=user.login,
-                          first_name=user.first_name,
-                          last_name=user.last_name)
+        return UserSchema(
+            uuid=user.id,
+            login=user.login,
+            first_name=user.first_name,
+            last_name=user.last_name,
+        )
     else:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail='This login already exists')
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="This login already exists"
+        )
 
 
 # /api/v1/users/change_user_info
@@ -97,10 +103,12 @@ async def change_user_info(
 
     tokens = get_tokens_from_cookie(request)
     change_user = await user_service.change_user_info(tokens.access_token, user_params)
-    return UserSchema(uuid=change_user.id,
-                      login=change_user.login,
-                      first_name=change_user.first_name,
-                      last_name=change_user.last_name)
+    return UserSchema(
+        uuid=change_user.id,
+        login=change_user.login,
+        first_name=change_user.first_name,
+        last_name=change_user.last_name,
+    )
 
 
 # /api/v1/users/logout
@@ -112,11 +120,13 @@ async def change_user_info(
     description="Выход текущего авторизованного пользователя",
     tags=["Пользователи"],
 )
-async def logout(request: Request,
-                 user_service: UserService = Depends(get_user_service)) -> bool:
+async def logout(
+    request: Request, user_service: UserService = Depends(get_user_service)
+) -> bool:
     tokens = get_tokens_from_cookie(request)
-    return await user_service.logout(access_token=tokens.access_token,
-                                     refresh_token=tokens.refresh_token)
+    return await user_service.logout(
+        access_token=tokens.access_token, refresh_token=tokens.refresh_token
+    )
 
 
 # /api/v1/users/refresh_token
@@ -154,8 +164,7 @@ async def refresh_token(
     tags=["Пользователи"],
 )
 async def get_login_history(
-    request: Request,
-    auth_service: Annotated[AuthService, Depends(get_auth_service)]
+    request: Request, auth_service: Annotated[AuthService, Depends(get_auth_service)]
 ) -> list[AuthenticationSchema]:
 
     tokens = get_tokens_from_cookie(request)
@@ -163,10 +172,12 @@ async def get_login_history(
 
     list_auth_scheme = []
     for item in auth_data:
-        auth_scheme = AuthenticationSchema(uuid=item.id,
-                                           user_id=item.user_id,
-                                           user_agent=item.user_agent,
-                                           date_auth=item.date_auth)
+        auth_scheme = AuthenticationSchema(
+            uuid=item.id,
+            user_id=item.user_id,
+            user_agent=item.user_agent,
+            date_auth=item.date_auth,
+        )
         list_auth_scheme.append(auth_scheme)
     return list_auth_scheme
 
@@ -184,7 +195,9 @@ async def get_login_history(
 async def check_permission(
     request: Request,
     permission_params: Annotated[PermissionsParams, Depends()],
-    user_service: UserService = Depends(get_user_service)
+    user_service: UserService = Depends(get_user_service),
 ) -> bool:
     tokens = get_tokens_from_cookie(request)
-    return await user_service.check_permissions(tokens.access_token, permission_params.name)
+    return await user_service.check_permissions(
+        tokens.access_token, permission_params.name
+    )

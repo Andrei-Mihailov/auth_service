@@ -166,7 +166,11 @@ class BaseService(AbstractBaseService):
     async def get_user_role(self, user_id):
         user = await self.storage.get(User, user_id)
         if user is not None and user.role_id is not None:
-            stmt = select(Roles).options(selectinload(Roles.permissions)).where(Roles.id == user.role_id)
+            stmt = (
+                select(Roles)
+                .options(selectinload(Roles.permissions))
+                .where(Roles.id == user.role_id)
+            )
             result = await self.storage.execute(stmt)
             role = result.fetchone()
             if role is not None:
@@ -256,3 +260,25 @@ class BaseService(AbstractBaseService):
         payload = decode_jwt(jwt_token=token)
         key = "black_list:" + payload.get("self_uuid")
         return await self._get_from_cache(key)
+
+    async def is_admin(self, access_token: str) -> bool:
+        """Проверка, является ли пользователь администратором, используя токен."""
+        payload = decode_jwt(jwt_token=access_token)
+        user_is_admin = payload.get("is_admin")
+        return await user_is_admin
+
+    async def is_superuser(self, access_token: str) -> bool:
+        """Проверка, является ли пользователь суперпользователем, используя токен."""
+        payload = decode_jwt(jwt_token=access_token)
+        user_is_admin = payload.get("is_superuser")
+        return await user_is_admin
+
+    async def has_permision(self, access_token: str) -> bool:
+        if self.is_admin(access_token):
+            return await True
+
+        elif self.is_superuser(access_token):
+            return await True
+
+        else:
+            return await False

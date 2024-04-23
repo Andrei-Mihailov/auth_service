@@ -1,6 +1,7 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException, Request
 from sqlalchemy.exc import MissingGreenlet
+from pydantic_core import ValidationError
 
 from api.v1.schemas.roles import (
     RolesSchema,
@@ -8,13 +9,27 @@ from api.v1.schemas.roles import (
     RoleEditParams,
     UserRoleSchema,
     PermissionsSchema,
-    RolesPermissionsSchema
+    RolesPermissionsSchema,
+)
+
+from api.v1.schemas.auth import (
+    TokenParams,
 )
 
 
 from services.role import RoleService, get_role_service
 
 router = APIRouter()
+
+
+def get_tokens_from_cookie(request: Request) -> TokenParams:
+    try:
+        tokens = TokenParams(access_token=request.cookies.get("access_token"))
+    except ValidationError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Tokens is not found"
+        )
+    return tokens
 
 
 # /api/v1/roles/create
@@ -28,16 +43,18 @@ router = APIRouter()
     tags=["Роли"],
 )
 async def create(
+    request: Request,
     role_params: Annotated[RoleParams, Depends()],
     role_service: Annotated[RoleService, Depends(get_role_service)],
 ) -> RolesSchema:
-    role = await role_service.create(role_params)
+    token = get_tokens_from_cookie(request)
+    role = await role_service.create(role_params, token)
     if role is not None:
-        return RolesSchema(uuid=role.id,
-                           type=role.type)
+        return RolesSchema(uuid=role.id, type=role.type)
     else:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail='This role already exists')
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="This role already exists"
+        )
 
 
 # /api/v1/roles/{id_role}
@@ -49,10 +66,12 @@ async def create(
     tags=["Роли"],
 )
 async def delete(
+    request: Request,
     id_role: str,
-    role_service: Annotated[RoleService, Depends(get_role_service)]
+    role_service: Annotated[RoleService, Depends(get_role_service)],
 ) -> None:
-    result = await role_service.delete(id_role)
+    token = get_tokens_from_cookie(request)
+    result = await role_service.delete(id_role, token)
     if result:
         return None
     else:
@@ -70,14 +89,15 @@ async def delete(
     tags=["Роли"],
 )
 async def change(
+    request: Request,
     id_role: str,
     role_params: Annotated[RoleEditParams, Depends()],
     role_service: Annotated[RoleService, Depends(get_role_service)],
 ) -> RolesSchema:
-    role = await role_service.update(id_role, role_params)
+    token = get_tokens_from_cookie(request)
+    role = await role_service.update(id_role, role_params, token)
     if role is not None:
-        return RolesSchema(uuid=role.id,
-                           type=role.type)
+        return RolesSchema(uuid=role.id, type=role.type)
     else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -103,13 +123,12 @@ async def list_roles(
             try:
                 perms = []
                 for subitem in item._data[0].permissions:
-                    perms.append(PermissionsSchema(uuid=subitem.id,
-                                                   name=subitem.name))
+                    perms.append(PermissionsSchema(uuid=subitem.id, name=subitem.name))
             except MissingGreenlet:
                 perms = None
-            roles_scheme = RolesPermissionsSchema(uuid=item._data[0].id,
-                                                  type=item._data[0].type,
-                                                  permissions=perms)
+            roles_scheme = RolesPermissionsSchema(
+                uuid=item._data[0].id, type=item._data[0].type, permissions=perms
+            )
             list_roles_scheme.append(roles_scheme)
     return list_roles_scheme
 
@@ -125,14 +144,15 @@ async def list_roles(
     tags=["Роли"],
 )
 async def add_user_role(
+    request: Request,
     user_id: str,
     id_role: str,
-    role_service: Annotated[RoleService, Depends(get_role_service)]
+    role_service: Annotated[RoleService, Depends(get_role_service)],
 ) -> UserRoleSchema:
-    result = await role_service.assign_role(user_id, id_role)
+    token = get_tokens_from_cookie(request)
+    result = await role_service.assign_role(user_id, id_role, token)
     if result is not None:
-        return UserRoleSchema(id_role=id_role,
-                              user_id=user_id)
+        return UserRoleSchema(id_role=id_role, user_id=user_id)
     else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -148,7 +168,9 @@ async def add_user_role(
     tags=["Роли"],
 )
 async def del_user_role(
+    request: Request,
     user_id: str,
-    role_service: Annotated[RoleService, Depends(get_role_service)]
+    role_service: Annotated[RoleService, Depends(get_role_service)],
 ) -> UserRoleSchema:
-    return await role_service.deassign_role(user_id)
+    token = get_tokens_from_cookie(request)
+    return await role_service.deassign_role(user_id, token)

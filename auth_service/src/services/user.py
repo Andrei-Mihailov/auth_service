@@ -26,14 +26,11 @@ class UserService(BaseService):
     def token_decode(self, token):
         return decode_jwt(jwt_token=token)
 
-    async def get_validate_user(self,
-                                user_login: str,
-                                user_password: str) -> User:
+    async def get_validate_user(self, user_login: str, user_password: str) -> User:
         user: User = await self.get_user_by_login(user_login)
         if user is None:  # если в бд не нашли такой логин
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="invalid login"
+                status_code=status.HTTP_404_NOT_FOUND, detail="invalid login"
             )
         if not user.check_password(user_password):  # если пароль не совпадает
             raise HTTPException(
@@ -46,11 +43,7 @@ class UserService(BaseService):
 
         return user
 
-    async def change_user_info(
-        self,
-        access_token: str,
-        user_data: dict
-    ) -> User:
+    async def change_user_info(self, access_token: str, user_data: dict) -> User:
         payload = self.token_decode(access_token)
         user_uuid = payload.get("sub")
 
@@ -60,19 +53,16 @@ class UserService(BaseService):
                 user = await self.change_instance_data(user_uuid, user_data)
                 if user is None:  # если в бд пг не нашли такой uuid
                     raise HTTPException(
-                        status_code=status.HTTP_401_UNAUTHORIZED, detail="user not found or login exists"
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="user not found or login exists",
                     )
             else:
                 raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="uncorrect token"
+                    status_code=status.HTTP_403_FORBIDDEN, detail="uncorrect token"
                 )
         return user
 
-    async def create_user(
-        self,
-        user_params
-    ) -> User:
+    async def create_user(self, user_params) -> User:
         user = await self.create_new_instance(user_params)
         return user
 
@@ -86,12 +76,8 @@ class UserService(BaseService):
         await self.add_to_white_list(refresh_token, "refresh")
         return Tokens(access_token=access_token, refresh_token=refresh_token), user
 
-    async def logout(
-            self,
-            access_token: str,
-            refresh_token: str
-    ) -> bool:
-        await self.add_to_black_list(access_token, 'access')
+    async def logout(self, access_token: str, refresh_token: str) -> bool:
+        await self.add_to_black_list(access_token, "access")
         await self.del_from_white_list(refresh_token)
         return True
 
@@ -111,22 +97,21 @@ class UserService(BaseService):
                 new_access_token = create_access_token(user)
                 new_refresh_token = create_refresh_token(user)
                 # добавить старый access токен в блэк-лист redis
-                await self.add_to_black_list(access_token, 'access')
+                await self.add_to_black_list(access_token, "access")
                 # удалить старый refresh токен из вайт-листа redis
                 await self.del_from_white_list(refresh_token)
                 # добавить новый refresh токен в вайт-лист redis
-                await self.add_to_white_list(new_refresh_token, 'refresh')
-                return Tokens(access_token=new_access_token, refresh_token=new_refresh_token)
+                await self.add_to_white_list(new_refresh_token, "refresh")
+                return Tokens(
+                    access_token=new_access_token, refresh_token=new_refresh_token
+                )
             else:
                 raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="uncorrect token"
+                    status_code=status.HTTP_403_FORBIDDEN, detail="uncorrect token"
                 )
 
     async def check_permissions(
-        self,
-        access_token: str,
-        required_permissions: str
+        self, access_token: str, required_permissions: str
     ) -> bool:
         """Проверка прав доступа у пользователя."""
         payload = self.token_decode(access_token)

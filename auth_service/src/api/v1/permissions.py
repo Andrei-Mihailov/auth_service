@@ -1,11 +1,31 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException, Request
 
-from api.v1.schemas.roles import PermissionsParams, PermissionsSchema, RolePermissionsParams
+from api.v1.schemas.roles import (
+    PermissionsParams,
+    PermissionsSchema,
+    RolePermissionsParams,
+)
 from services.permission import PermissionService, get_permission_service
+
+from pydantic_core import ValidationError
+
+from api.v1.schemas.auth import (
+    TokenParams,
+)
 
 
 router = APIRouter()
+
+
+def get_tokens_from_cookie(request: Request) -> TokenParams:
+    try:
+        tokens = TokenParams(access_token=request.cookies.get("access_token"))
+    except ValidationError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Tokens is not found"
+        )
+    return tokens
 
 
 # /api/v1/permissions/create_permission
@@ -19,16 +39,19 @@ router = APIRouter()
     tags=["Разрешения"],
 )
 async def create_permission(
+    request: Request,
     permission_params: Annotated[PermissionsParams, Depends()],
     permission_service: PermissionService = Depends(get_permission_service),
 ) -> PermissionsSchema:
-    perm = await permission_service.create_permission(permission_params)
+    token = get_tokens_from_cookie(request)
+    perm = await permission_service.create_permission(permission_params, token)
     if perm is not None:
-        return PermissionsSchema(uuid=perm.id,
-                                 name=perm.name)
+        return PermissionsSchema(uuid=perm.id, name=perm.name)
     else:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail='This permission already exists')
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This permission already exists",
+        )
 
 
 # /api/v1/permissions/assign_permission_to_role
@@ -42,10 +65,14 @@ async def create_permission(
     tags=["Разрешения"],
 )
 async def assign_permission_to_role(
+    request: Request,
     permission_params: Annotated[RolePermissionsParams, Depends()],
     permission_service: PermissionService = Depends(get_permission_service),
 ) -> bool:
-    result = await permission_service.assign_permission_to_role(permission_params)
+    token = get_tokens_from_cookie(request)
+    result = await permission_service.assign_permission_to_role(
+        permission_params, token
+    )
     if result:
         return True
     else:
@@ -63,10 +90,14 @@ async def assign_permission_to_role(
     tags=["Разрешения"],
 )
 async def remove_permission_from_role(
+    request: Request,
     permission_params: Annotated[RolePermissionsParams, Depends()],
     permission_service: PermissionService = Depends(get_permission_service),
 ) -> bool:
-    result = await permission_service.remove_permission_from_role(permission_params)
+    token = get_tokens_from_cookie(request)
+    result = await permission_service.remove_permission_from_role(
+        permission_params, token
+    )
     if result:
         return True
     else:

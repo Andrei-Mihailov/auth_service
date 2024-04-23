@@ -30,6 +30,8 @@ def create_access_token(user: User):
         "sub": str(user.id),  # userid
         "role_id": str(user.role_id) if user.role_id else None,
         "self_uuid": str(uuid.uuid4()),
+        "is_admin": bool,
+        "is_superuser": bool,
     }
     return create_jwt(
         ACCESS_TOKEN_TYPE, payload, settings.auth_jwt.access_token_expire_minutes
@@ -74,7 +76,7 @@ def decode_jwt(
     except jwt.exceptions.ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token has expired, refresh token"
+            detail="Token has expired, refresh token",
         )
     return decoded
 
@@ -91,8 +93,7 @@ def validate_password(hashed_password: bytes, password: str) -> bool:
         return settings.pwd_context.verify(password, hashed_password)
     except ValueError:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Incorrect password"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Incorrect password"
         )
 
 
@@ -110,7 +111,6 @@ def check_date_and_type_token(payload: dict, type_token_need: str) -> bool:
     if now > exp:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Token has expired, refresh token"
-
+            detail="Token has expired, refresh token",
         )
     return True
