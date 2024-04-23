@@ -15,6 +15,5 @@ class Role_names(StrEnum):
     """Роли пользователя на сайте."""
 
     admin = auto()
-    superuser = auto()
     user = auto()
     guest = auto()

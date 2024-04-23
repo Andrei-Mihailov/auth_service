@@ -272,25 +272,32 @@ class BaseService(AbstractBaseService):
         user_is_superuser = payload.get("is_superuser")
         return user_is_superuser
 
-    async def has_permission(self, access_token: str) -> int:
+    async def has_permission(self, access_token: str) -> bool:
         """Проверка разрешений пользователя на основе токена."""
         payload = decode_jwt(jwt_token=access_token)
         if self.is_admin(payload):
-            return 1
+            return True
         elif self.is_superuser(payload):
-            return 2
+            return True
         else:
-            return 0
+            return False
 
     async def allow_for_change(self, access_token: str, user_id):
-        has_permission = await self.has_permission(access_token)
-        user_role = self.get_user_role(user_id)
+        payload = decode_jwt(jwt_token=access_token)
+        check_superuser = await self.is_superuser(payload)
 
-        if has_permission == 1:  # admin
-            if user_role not in [Role_names.admin, Role_names.superuser]:
+        if check_superuser:
+            return True
+
+        has_permission = await self.has_permission(access_token)
+        if has_permission:
+            user_role = self.get_user_role(user_id)
+
+            if user_role == Role_names.admin :
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Admins can't deassign for other admins or superuser.")
+
             else:
                 return True
 
