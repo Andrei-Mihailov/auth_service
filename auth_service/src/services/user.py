@@ -69,7 +69,7 @@ class UserService(BaseService):
     async def login(self, user_login: str, user_password: str) -> Tokens:
         user = await self.get_validate_user(user_login, user_password)
 
-        access_token = create_access_token(user)
+        access_token = create_access_token(user, user.role)
         refresh_token = create_refresh_token(user)
 
         # добавление refresh токена в вайт-лист редиса
@@ -94,7 +94,7 @@ class UserService(BaseService):
             if await self.get_from_white_list(refresh_token):
                 # наити пользователя по user_uuid, вернуть (модель User)
                 user = await self.get_instance_by_id(user_uuid)
-                new_access_token = create_access_token(user)
+                new_access_token = create_access_token(user, user.role)
                 new_refresh_token = create_refresh_token(user)
                 # добавить старый access токен в блэк-лист redis
                 await self.add_to_black_list(access_token, "access")
