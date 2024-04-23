@@ -29,7 +29,7 @@ async def create_permission(
     permission_service: PermissionService = Depends(get_permission_service),
 ) -> PermissionsSchema:
     token = get_tokens_from_cookie(request)
-    perm = await permission_service.create_permission(permission_params, token)
+    perm = await permission_service.create_permission(permission_params, token.access_token)
     if perm is not None:
         return PermissionsSchema(uuid=perm.id, name=perm.name)
     else:
@@ -56,7 +56,7 @@ async def assign_permission_to_role(
 ) -> bool:
     token = get_tokens_from_cookie(request)
     result = await permission_service.assign_permission_to_role(
-        permission_params, token
+        permission_params, token.access_token
     )
     if result:
         return True
@@ -81,7 +81,7 @@ async def remove_permission_from_role(
 ) -> bool:
     token = get_tokens_from_cookie(request)
     result = await permission_service.remove_permission_from_role(
-        permission_params, token
+        permission_params, token.access_token
     )
     if result:
         return True

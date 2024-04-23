@@ -34,7 +34,7 @@ async def create(
     role_service: Annotated[RoleService, Depends(get_role_service)],
 ) -> RolesSchema:
     token = get_tokens_from_cookie(request)
-    role = await role_service.create(role_params, token)
+    role = await role_service.create(role_params, token.access_token)
     if role is not None:
         return RolesSchema(uuid=role.id, type=role.type)
     else:
@@ -57,7 +57,7 @@ async def delete(
     role_service: Annotated[RoleService, Depends(get_role_service)],
 ) -> None:
     token = get_tokens_from_cookie(request)
-    result = await role_service.delete(id_role, token)
+    result = await role_service.delete(id_role, token.access_token)
     if result:
         return None
     else:
@@ -81,7 +81,7 @@ async def change(
     role_service: Annotated[RoleService, Depends(get_role_service)],
 ) -> RolesSchema:
     token = get_tokens_from_cookie(request)
-    role = await role_service.update(id_role, role_params, token)
+    role = await role_service.update(id_role, role_params, token.access_token)
     if role is not None:
         return RolesSchema(uuid=role.id, type=role.type)
     else:
@@ -136,7 +136,7 @@ async def add_user_role(
     role_service: Annotated[RoleService, Depends(get_role_service)],
 ) -> UserRoleSchema:
     token = get_tokens_from_cookie(request)
-    result = await role_service.assign_role(user_id, id_role, token)
+    result = await role_service.assign_role(user_id, id_role, token.access_token)
     if result is not None:
         return UserRoleSchema(id_role=id_role, user_id=user_id)
     else:
@@ -159,4 +159,4 @@ async def del_user_role(
     role_service: Annotated[RoleService, Depends(get_role_service)],
 ) -> UserRoleSchema:
     token = get_tokens_from_cookie(request)
-    return await role_service.deassign_role(user_id, token)
+    return await role_service.deassign_role(user_id, token.access_token)
