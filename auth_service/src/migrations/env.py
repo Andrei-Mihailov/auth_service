@@ -5,7 +5,7 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from models.entity import Authentication # dont delete
+from models.entity import Authentication, User, Roles, Permissions  # dont delete
 from db.postgres_db import Base, dsn
 
 
