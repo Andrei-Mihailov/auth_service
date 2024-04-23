@@ -89,7 +89,7 @@ async def change(
 
 
 # /api/v1/roles/list
-@router.get(
+@router.post(
     "/list",
     response_model=list[RolesPermissionsSchema],
     status_code=status.HTTP_200_OK,

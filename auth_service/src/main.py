@@ -20,7 +20,6 @@ from core.config import settings
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     redis_db.redis = Redis(host=settings.redis_host, port=settings.redis_port)
-    # await postgres_db.purge_database()
     from models.entity import Permissions, Roles, User, Authentication
 
     await postgres_db.create_database()
@@ -90,7 +89,6 @@ def async_cmd(func):
 )
 @async_cmd
 async def create_superuser(username, password):
-    # await postgres_db.purge_database()
     from models.entity import User
     from sqlalchemy.future import select
 

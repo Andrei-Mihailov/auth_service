@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     # Название проекта. Используется в Swagger-документации
     project_name: str
 
+    service_port: int
+
     # Настройки postgres
     db_name: str
     db_user: str
