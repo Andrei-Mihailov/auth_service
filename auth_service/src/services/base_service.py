@@ -285,7 +285,7 @@ class BaseService(AbstractBaseService):
         has_permission = await self.has_permission(access_token)
         user_role = self.get_user_role(user_id)
 
-        if has_permission == 1: #admin
+        if has_permission == 1:  # admin
             if user_role == "admin":
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,

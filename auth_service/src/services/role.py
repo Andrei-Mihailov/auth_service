@@ -59,11 +59,11 @@ class RoleService(BaseService):
         return await self.get_all_instance()
 
     async def assign_role(self, user_id: str, role_id: str, access_token: str) -> User:
-        if allow_for_change(access_token, user_id ):
+        if allow_for_change(access_token, user_id):
             return await self.set_user_role(user_id, role_id)
 
     async def deassign_role(self, user_id: str, access_token: str) -> User:
-        if allow_for_change( access_token, user_id):
+        if allow_for_change(access_token, user_id):
             return await self.del_user_role(user_id)
 
     async def get_default_role(self) -> Roles:
@@ -76,6 +76,7 @@ class RoleService(BaseService):
         """Отзыв роли у пользователя."""
         if allow_for_change(access_token, user.user_id):
             return await self.del_user_role(user, role)
+
 
 @lru_cache()
 def get_role_service(
