@@ -13,21 +13,10 @@ from api.v1.schemas.users import UserParams, UserSchema, UserEditParams
 from api.v1.schemas.roles import PermissionsParams
 from services.user import UserService, get_user_service
 from services.auth import AuthService, get_auth_service
+from service import get_tokens_from_cookie
 
 router = APIRouter()
 
-
-def get_tokens_from_cookie(request: Request) -> TokenParams:
-    try:
-        tokens = TokenParams(
-            access_token=request.cookies.get("access_token"),
-            refresh_token=request.cookies.get("refresh_token"),
-        )
-    except ValidationError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Tokens is not found"
-        )
-    return tokens
 
 
 # /api/v1/users/login

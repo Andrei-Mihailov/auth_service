@@ -8,7 +8,8 @@ from api.v1.schemas.auth import (
 def get_tokens_from_cookie(request: Request) -> TokenParams:
     try:
         token = TokenParams(
-            access_token=request.cookies.get("access_token")
+            access_token=request.cookies.get("access_token"),
+            refresh_token=request.cookies.get("refresh_token"),
         )
     except ValidationError:
         raise HTTPException(
