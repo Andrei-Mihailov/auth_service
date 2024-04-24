@@ -37,6 +37,7 @@ async def login_user():
             pytest.refresh_token_superuser = refresh_token
 
         # создание нового пользователя
+
         query_data = {"email": email, "password": user_pass}
         response = await client.post(
             "/api/v1/users/user_registration", params=query_data

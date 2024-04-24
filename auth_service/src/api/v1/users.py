@@ -12,7 +12,7 @@ from api.v1.schemas.users import UserParams, UserSchema, UserEditParams
 from api.v1.schemas.roles import PermissionsParams
 from services.user import UserService, get_user_service
 from services.auth import AuthService, get_auth_service
-from .service import get_tokens_from_cookie
+from .service import get_tokens_from_cookie, PaginationParams
 
 router = APIRouter()
 
@@ -151,11 +151,15 @@ async def refresh_token(
     tags=["Пользователи"],
 )
 async def get_login_history(
-    request: Request, auth_service: Annotated[AuthService, Depends(get_auth_service)]
+    request: Request,
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
+    pagination_params: Annotated[PaginationParams, Depends()],
 ) -> list[AuthenticationSchema]:
 
     tokens = get_tokens_from_cookie(request)
-    auth_data = await auth_service.login_history(tokens.access_token)
+    auth_data = await auth_service.login_history(
+        tokens.access_token, pagination_params.page_number, pagination_params.page_size
+    )
 
     list_auth_scheme = []
     for item in auth_data:
