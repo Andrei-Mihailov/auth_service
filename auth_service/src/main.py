@@ -87,6 +87,7 @@ def async_cmd(func):
 async def create_superuser(email, password):
     from models.entity import User
     from sqlalchemy.future import select
+
     async with postgres_db.async_session() as session:
         result = await session.execute(select(User).filter(User.email == email))
         existing_user = result.scalars().first()

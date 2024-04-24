@@ -23,7 +23,10 @@ def cookies_superuser():
 async def login_user():
     async with AsyncClient(base_url=SERVICE_URL) as client:
         # логин суперпользователя
-        query_data = {"email": test_settings.SU_email, "password": test_settings.SU_password}
+        query_data = {
+            "email": test_settings.SU_email,
+            "password": test_settings.SU_password,
+        }
         response = await client.post("/api/v1/users/login", params=query_data)
 
         if response.status_code == HTTPStatus.OK:
@@ -36,7 +39,9 @@ async def login_user():
         # создание нового пользователя
 
         query_data = {"email": email, "password": user_pass}
-        response = await client.post("/api/v1/users/user_registration", params=query_data)
+        response = await client.post(
+            "/api/v1/users/user_registration", params=query_data
+        )
         pytest.user_id = response.json()["uuid"]
         if response.status_code == HTTPStatus.OK:
             new_response = await client.post("/api/v1/users/login", params=query_data)
