@@ -298,7 +298,8 @@ class BaseService(AbstractBaseService):
                         if user_role == Role_names.admin:
                             raise HTTPException(
                                 status_code=status.HTTP_401_UNAUTHORIZED,
-                                detail="Admins can't deassign for other admins or superuser.")
+                                detail="Admins can't deassign for other admins or superuser.",
+                            )
 
                         else:
                             return True

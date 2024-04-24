@@ -6,7 +6,7 @@ from api.v1.schemas.auth import (
     AuthenticationSchema,
     TokenSchema,
     AuthenticationParams,
-    AuthenticationData
+    AuthenticationData,
 )
 from api.v1.schemas.users import UserParams, UserSchema, UserEditParams
 from api.v1.schemas.roles import PermissionsParams

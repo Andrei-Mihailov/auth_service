@@ -68,9 +68,7 @@ async def test_registration_user(make_post_request, query_data, expected_answer)
             {"email": new_email, "password": "testtest"},
             {"status": HTTPStatus.FORBIDDEN},
         ),
-        (
-            {"email": new_email, "password": new_user_pass},
-            {"status": HTTPStatus.OK}),
+        ({"email": new_email, "password": new_user_pass}, {"status": HTTPStatus.OK}),
         (
             {"email": str(uuid.uuid4()), "password": "user"},
             {"status": HTTPStatus.NOT_FOUND},
@@ -208,7 +206,9 @@ async def test_check_permission(make_post_request):
     # создаем новое разрешение
     url_permission = SERVICE_URL + "/api/v1/permissions/create_permission"
     query_data = {"name": permission_name}
-    response = await make_post_request(url_permission, query_data, cookie=cookies_superuser())
+    response = await make_post_request(
+        url_permission, query_data, cookie=cookies_superuser()
+    )
     response_permission = await response.json()
 
     # назначение прав роли
@@ -217,7 +217,9 @@ async def test_check_permission(make_post_request):
         "permissions_id": response_permission["uuid"],
     }
     url_role_permission = SERVICE_URL + "/api/v1/permissions/assign_permission_to_role"
-    response = await make_post_request(url_role_permission, query_data, cookie=cookies_superuser())
+    response = await make_post_request(
+        url_role_permission, query_data, cookie=cookies_superuser()
+    )
     # присвоение роли пользователю
     url = (
         SERVICE_URL + f"/api/v1/roles/set/{pytest.new_user_id}/{response_role['uuid']}"
