@@ -29,7 +29,9 @@ async def create_permission(
     permission_service: PermissionService = Depends(get_permission_service),
 ) -> PermissionsSchema:
     token = get_tokens_from_cookie(request)
-    perm = await permission_service.create_permission(permission_params, token.access_token)
+    perm = await permission_service.create_permission(
+        permission_params, token.access_token
+    )
     if perm is not None:
         return PermissionsSchema(uuid=perm.id, name=perm.name)
     else:
