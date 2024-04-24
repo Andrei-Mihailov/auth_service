@@ -34,7 +34,7 @@ async def login(
 ) -> None:
     user_agent = request.headers.get("user-agent")
     tokens_resp, user = await user_service.login(
-        user_params.login, user_params.password
+        user_params.email, user_params.password
     )
     user_agent_data = AuthenticationData(user_agent=user_agent, user_id=user.id)
     await auth_service.new_auth(user_agent_data)
@@ -62,13 +62,13 @@ async def user_registration(
     if user is not None:
         return UserSchema(
             uuid=user.id,
-            login=user.login,
+            email=user.email,
             first_name=user.first_name,
             last_name=user.last_name,
         )
     else:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="This login already exists"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="This email already exists"
         )
 
 
@@ -92,7 +92,7 @@ async def change_user_info(
     change_user = await user_service.change_user_info(tokens.access_token, user_params)
     return UserSchema(
         uuid=change_user.id,
-        login=change_user.login,
+        email=change_user.email,
         first_name=change_user.first_name,
         last_name=change_user.last_name,
     )

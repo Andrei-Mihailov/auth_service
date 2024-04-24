@@ -10,7 +10,7 @@ class TestSettings(BaseSettings):
     SERVICE_HOST: str = Field(default={env.get("SERVICE_HOST")})
     SERVICE_PORT: int = Field(default={env.get("SERVICE_PORT")})
 
-    SU_login: str = Field(default={env.get("SU_login")})
+    SU_email: str = Field(default={env.get("SU_email")})
     SU_password: str = Field(default={env.get("SU_password")})
 
     @property

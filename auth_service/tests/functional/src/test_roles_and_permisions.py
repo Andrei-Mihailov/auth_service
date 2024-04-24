@@ -8,7 +8,7 @@ from ..settings import test_settings
 
 SERVICE_URL = test_settings.SERVISE_URL
 
-login = str(uuid.uuid4())
+email = str(uuid.uuid4())
 user_pass = "test"
 
 
@@ -23,7 +23,7 @@ def cookies_superuser():
 async def login_user():
     async with AsyncClient(base_url=SERVICE_URL) as client:
         # логин суперпользователя
-        query_data = {"login": test_settings.SU_login, "password": test_settings.SU_password}
+        query_data = {"email": test_settings.SU_email, "password": test_settings.SU_password}
         response = await client.post("/api/v1/users/login", params=query_data)
 
         if response.status_code == HTTPStatus.OK:
@@ -34,7 +34,7 @@ async def login_user():
             pytest.refresh_token_superuser = refresh_token
 
         # создание нового пользователя
-        query_data = {"login": login, "password": user_pass}
+        query_data = {"email": email, "password": user_pass}
         response = await client.post("/api/v1/users/user_registration", params=query_data)
         pytest.user_id = response.json()["uuid"]
         if response.status_code == HTTPStatus.OK:

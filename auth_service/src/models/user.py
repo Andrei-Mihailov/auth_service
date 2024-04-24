@@ -9,7 +9,7 @@ class User(BaseModel):
     """Модель пользователя на сайте."""
 
     id: UserID
-    login: str
+    email: str
     first_name: Union[str, None]
     last_name: Union[str, None]
     password: bytes

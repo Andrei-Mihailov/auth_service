@@ -18,7 +18,7 @@ class TokenSchema(BaseModel):
 
 
 class AuthenticationParams(BaseModel):
-    login: str = Field(description="Логин")
+    email: str = Field(description="Email")
     password: str = Field(description="Пароль")
 
 
