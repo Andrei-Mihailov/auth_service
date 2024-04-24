@@ -26,11 +26,11 @@ class UserService(BaseService):
     def token_decode(self, token):
         return decode_jwt(jwt_token=token)
 
-    async def get_validate_user(self, user_login: str, user_password: str) -> User:
-        user: User = await self.get_user_by_login(user_login)
+    async def get_validate_user(self, user_email: str, user_password: str) -> User:
+        user: User = await self.get_user_by_email(user_email)
         if user is None:  # если в бд не нашли такой логин
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="invalid login"
+                status_code=status.HTTP_404_NOT_FOUND, detail="invalid email"
             )
         if not user.check_password(user_password):  # если пароль не совпадает
             raise HTTPException(
@@ -54,7 +54,7 @@ class UserService(BaseService):
                 if user is None:  # если в бд пг не нашли такой uuid
                     raise HTTPException(
                         status_code=status.HTTP_401_UNAUTHORIZED,
-                        detail="user not found or login exists",
+                        detail="user not found or email exists",
                     )
             else:
                 raise HTTPException(
@@ -66,8 +66,8 @@ class UserService(BaseService):
         user = await self.create_new_instance(user_params)
         return user
 
-    async def login(self, user_login: str, user_password: str) -> Tokens:
-        user = await self.get_validate_user(user_login, user_password)
+    async def login(self, user_email: str, user_password: str) -> Tokens:
+        user = await self.get_validate_user(user_email, user_password)
         user_role = user.role.type if user.role else None
         access_token = create_access_token(user, user_role)
         refresh_token = create_refresh_token(user)

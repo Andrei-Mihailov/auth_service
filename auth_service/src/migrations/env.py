@@ -6,7 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from db.postgres_db import Base, dsn
-
+from models.entity import *
 
 config = context.config
 

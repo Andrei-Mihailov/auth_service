@@ -59,7 +59,7 @@ class BaseService(AbstractBaseService):
                 updated_data = model_params
 
             for field, value in updated_data.items():
-                if field in ["login", "password"] and value is None:
+                if field in ["email", "password"] and value is None:
                     continue
                 setattr(instance, field, value)
 
@@ -73,8 +73,8 @@ class BaseService(AbstractBaseService):
             return None
 
     @backoff.on_exception(backoff.expo, conn_err_pg, max_tries=5)
-    async def get_user_by_login(self, login):
-        stmt = select(User).filter(User.login == login).options(selectinload(User.role))
+    async def get_user_by_email(self, email):
+        stmt = select(User).filter(User.email == email).options(selectinload(User.role))
         result = await self.storage.execute(stmt)
         user = result.scalars().first()
         return user

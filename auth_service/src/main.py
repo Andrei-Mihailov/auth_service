@@ -19,7 +19,6 @@ from core.config import settings
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     redis_db.redis = Redis(host=settings.redis_host, port=settings.redis_port)
-    await postgres_db.create_database()
     yield
     await redis_db.redis.close()
 
@@ -73,10 +72,10 @@ def async_cmd(func):
 
 @click.command()
 @click.option(
-    "--username",
+    "--email",
     default="test",
-    prompt="Enter username",
-    help="Username for the superuser",
+    prompt="Enter email",
+    help="email for the superuser",
 )
 @click.option(
     "--password",
@@ -85,20 +84,18 @@ def async_cmd(func):
     help="Password for the superuser",
 )
 @async_cmd
-async def create_superuser(username, password):
+async def create_superuser(email, password):
     from models.entity import User
     from sqlalchemy.future import select
-
-    await postgres_db.create_database()
     async with postgres_db.async_session() as session:
-        result = await session.execute(select(User).filter(User.login == username))
+        result = await session.execute(select(User).filter(User.email == email))
         existing_user = result.scalars().first()
         if existing_user:
-            click.echo("User with this login already exists!")
+            click.echo("User with this email already exists!")
             return
 
         # Создаем суперпользователя
-        superuser_data = {"login": username, "password": password, "is_superuser": True}
+        superuser_data = {"email": email, "password": password, "is_superuser": True}
         instance = User(**superuser_data)
         session.add(instance)
         try:
@@ -107,7 +104,7 @@ async def create_superuser(username, password):
             print(f"Ошибка при создании объекта: {e}")
             return None
 
-        click.echo(f"Superuser {username} created successfully!")
+        click.echo(f"Superuser {email} created successfully!")
 
 
 if __name__ == "__main__":

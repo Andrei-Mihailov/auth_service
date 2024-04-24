@@ -36,10 +36,10 @@ http://localhost:8000/api/openapi
 ## Для создания суперпользователя в консоли необходимо использовать команду:
 
 ```
-python src/main.py --username=username --password=password
+python src/main.py --email=email --password=password
 ```
 
-где username и password - логин и пароль суперпользователя
+где email и password - email и пароль суперпользователя
 ⚠️ Важно: перед выполнением команды убедитесь, что настройки базы в файле .env указаны верно
 
 ## Тестирование

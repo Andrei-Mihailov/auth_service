@@ -6,13 +6,13 @@ from models.value_objects import UserID
 
 class UserSchema(BaseModel):
     uuid: UserID
-    login: str
+    email: str
     first_name: Union[str, None]
     last_name: Union[str, None]
 
 
 class UserParams(BaseModel):
-    login: str = Field(description="Логин")
+    email: str = Field(description="Email")
     first_name: Union[str, None] = Field(
         description="Имя", default=None, allow_none=True
     )
@@ -23,7 +23,7 @@ class UserParams(BaseModel):
 
 
 class UserEditParams(BaseModel):
-    login: Union[str, None] = Field(description="Логин", default=None, allow_none=True)
+    email: Union[str, None] = Field(description="Email", default=None, allow_none=True)
     first_name: Union[str, None] = Field(
         description="Имя", default=None, allow_none=True
     )

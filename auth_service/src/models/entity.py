@@ -46,7 +46,7 @@ class User(Base):
         unique=True,
         nullable=False,
     )
-    login: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(255), nullable=False)
     first_name: Mapped[str] = mapped_column(String(50), default=None, nullable=True)
     last_name: Mapped[str] = mapped_column(String(50), default=None, nullable=True)
@@ -60,13 +60,13 @@ class User(Base):
 
     def __init__(
         self,
-        login: str,
+        email: str,
         password: str,
         first_name: str = None,
         last_name: str = None,
         is_superuser: bool = False,
     ) -> None:
-        self.login = login
+        self.email = email
         self.password = hash_password(password)
         self.first_name = first_name
         self.last_name = last_name
@@ -76,7 +76,7 @@ class User(Base):
         return validate_password(self.password, password)
 
     def __repr__(self) -> str:
-        return f"<User {self.login}>"
+        return f"<User {self.email}>"
 
 
 class Authentication(Base):

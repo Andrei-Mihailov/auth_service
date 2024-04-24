@@ -7,7 +7,7 @@ from ..settings import test_settings
 
 SERVICE_URL = test_settings.SERVISE_URL
 
-new_login = str(uuid.uuid4())
+new_email = str(uuid.uuid4())
 new_user_pass = "test"
 
 
@@ -25,7 +25,7 @@ def cookies_superuser():
 
 async def login_user(make_post_request):
     # логин суперпользователя
-    query_data = {"login": "superuser", "password": "superuser"}
+    query_data = {"email": "superuser", "password": "superuser"}
     url = SERVICE_URL + "/api/v1/users/login"
     response = await make_post_request(url, query_data)
 
@@ -42,15 +42,15 @@ async def login_user(make_post_request):
 @pytest.mark.parametrize(
     "query_data, expected_answer",
     [
-        ({"login": new_login, "password": new_user_pass}, {"status": HTTPStatus.OK}),
-        ({"login": new_login, "password": "test"}, {"status": HTTPStatus.BAD_REQUEST}),
+        ({"email": new_email, "password": new_user_pass}, {"status": HTTPStatus.OK}),
+        ({"email": new_email, "password": "test"}, {"status": HTTPStatus.BAD_REQUEST}),
     ],
 )
 @pytest.mark.order(1)
 @pytest.mark.asyncio
 async def test_registration_user(make_post_request, query_data, expected_answer):
     url = SERVICE_URL + "/api/v1/users/user_registration"
-    query_data = {"login": query_data["login"], "password": query_data["password"]}
+    query_data = {"email": query_data["email"], "password": query_data["password"]}
 
     response = await make_post_request(url, query_data)
 
@@ -65,12 +65,15 @@ async def test_registration_user(make_post_request, query_data, expected_answer)
     "query_data, expected_answer",
     [
         (
-            {"login": new_login, "password": "testtest"},
+            {"email": new_email, "password": "testtest"},
             {"status": HTTPStatus.FORBIDDEN},
         ),
-        ({"login": new_login, "password": new_user_pass}, {"status": HTTPStatus.OK}),
+
         (
-            {"login": str(uuid.uuid4()), "password": "user"},
+            {"email": new_email, "password": new_user_pass},
+            {"status": HTTPStatus.OK}),
+        (
+            {"email": str(uuid.uuid4()), "password": "user"},
             {"status": HTTPStatus.NOT_FOUND},
         ),
     ],
@@ -79,7 +82,7 @@ async def test_registration_user(make_post_request, query_data, expected_answer)
 @pytest.mark.asyncio
 async def test_login_user(make_post_request, query_data, expected_answer):
     url = SERVICE_URL + "/api/v1/users/login"
-    query_data = {"login": query_data["login"], "password": query_data["password"]}
+    query_data = {"email": query_data["email"], "password": query_data["password"]}
 
     response = await make_post_request(url, query_data)
 
@@ -109,7 +112,7 @@ async def test_login_user(make_post_request, query_data, expected_answer):
             {
                 "first_name": "ivan",
                 "last_name": "petrov",
-                "login": str(uuid.uuid4()),
+                "email": str(uuid.uuid4()),
                 "password": "user55",
             }
         ),
@@ -119,7 +122,7 @@ async def test_login_user(make_post_request, query_data, expected_answer):
 @pytest.mark.asyncio
 async def test_change_user(make_put_request, query_data):
     url = SERVICE_URL + "/api/v1/users/change_user_info"
-    query_data = {"login": query_data["login"], "password": query_data["password"]}
+    query_data = {"email": query_data["email"], "password": query_data["password"]}
 
     response = await make_put_request(url, query_data)
     assert response.status == HTTPStatus.NOT_FOUND
