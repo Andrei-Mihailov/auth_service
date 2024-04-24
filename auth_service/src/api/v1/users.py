@@ -158,7 +158,7 @@ async def get_login_history(
 
     tokens = get_tokens_from_cookie(request)
     auth_data = await auth_service.login_history(
-        tokens.access_token, pagination_params.page_number, pagination_params.page_size
+        tokens.access_token, pagination_params.page_size, pagination_params.page_number
     )
 
     list_auth_scheme = []
