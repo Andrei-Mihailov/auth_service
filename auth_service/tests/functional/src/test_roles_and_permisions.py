@@ -1,10 +1,10 @@
 import pytest
 import uuid
+
 from httpx import AsyncClient
 from http import HTTPStatus
 
 from ..settings import test_settings
-
 
 SERVICE_URL = test_settings.SERVISE_URL
 
@@ -45,6 +45,27 @@ async def login_user():
 
                 pytest.access_token_other = access_token
                 pytest.refresh_token_other = refresh_token
+
+
+@pytest.mark.order(-1)
+@pytest.mark.asyncio
+async def test_authenticated_resource(client_factory):
+    pytest.role_type = str(uuid.uuid4())
+    async with client_factory(user="user") as client:
+        response = await client.post(
+            "/api/v1/roles/create",
+            params={"type": pytest.role_type}
+        )
+        assert response.status_code == HTTPStatus.UNAUTHORIZED
+
+    async with client_factory(user="superuser") as client:
+        response = await client.post(
+            "/api/v1/roles/create",
+            params={"type": pytest.role_type}
+        )
+        assert response.status_code == HTTPStatus.OK
+        assert response.json()["type"] == pytest.role_type
+        pytest.role_id = response.json()["uuid"]
 
 
 @pytest.mark.order("first")

@@ -1,7 +1,7 @@
-from http import HTTPStatus
 import uuid
-
 import pytest
+
+from http import HTTPStatus
 
 from ..settings import test_settings
 

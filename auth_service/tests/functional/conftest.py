@@ -1,5 +1,18 @@
 import pytest_asyncio
 import aiohttp
+import os
+import sys
+
+fixtures_path = os.path.abspath(os.path.join(
+    os.path.dirname(__file__), 'fixtures'))
+
+
+sys.path.append(fixtures_path)
+
+
+pytest_plugins = [
+    'tests.functional.fixtures.client_fixtures',
+]
 
 
 @pytest_asyncio.fixture()
