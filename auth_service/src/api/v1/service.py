@@ -6,7 +6,6 @@ from api.v1.schemas.auth import (
 from pydantic import BaseModel, Field
 
 
-
 class PaginationParams(BaseModel):
     page_number: int = Field(1, ge=1)
     page_size: int = Field(1, ge=1)
