@@ -5,12 +5,11 @@ from api.v1.schemas.auth import (
 )
 from pydantic import BaseModel, Field
 
-default_page_size: int = 50
 
 
 class PaginationParams(BaseModel):
     page_number: int = Field(1, ge=1)
-    page_size: int = Field(default_page_size, ge=1)
+    page_size: int = Field(1, ge=1)
 
 
 def get_tokens_from_cookie(request: Request) -> TokenParams:
