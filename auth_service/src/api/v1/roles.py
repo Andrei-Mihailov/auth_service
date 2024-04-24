@@ -99,8 +99,7 @@ async def change(
     tags=["Роли"],
 )
 async def list_roles(
-    request: Request,
-    role_service: Annotated[RoleService, Depends(get_role_service)]
+    request: Request, role_service: Annotated[RoleService, Depends(get_role_service)]
 ) -> list[RolesPermissionsSchema]:
     token = get_tokens_from_cookie(request)
     roles_data = await role_service.elements(token.access_token)

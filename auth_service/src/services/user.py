@@ -138,8 +138,7 @@ class UserService(BaseService):
                     return False
             else:
                 raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="uncorrect token"
+                    status_code=status.HTTP_403_FORBIDDEN, detail="uncorrect token"
                 )
 
         return True

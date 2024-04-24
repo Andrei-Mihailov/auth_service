@@ -119,7 +119,12 @@ class BaseService(AbstractBaseService):
         if user is None:
             return None
 
-        stmt = select(self.model).filter(self.model.user_id == user_uuid).offset(offset).limit(limit)
+        stmt = (
+            select(self.model)
+            .filter(self.model.user_id == user_uuid)
+            .offset(offset)
+            .limit(limit)
+        )
         result = await self.storage.execute(stmt)
         instance = result.scalars().all()
         return instance
@@ -299,7 +304,8 @@ class BaseService(AbstractBaseService):
                         if user_role == Role_names.admin:
                             raise HTTPException(
                                 status_code=status.HTTP_401_UNAUTHORIZED,
-                                detail="Admins can't deassign for other admins or superuser.")
+                                detail="Admins can't deassign for other admins or superuser.",
+                            )
 
                         else:
                             return True

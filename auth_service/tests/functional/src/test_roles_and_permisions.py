@@ -23,7 +23,10 @@ def cookies_superuser():
 async def login_user():
     async with AsyncClient(base_url=SERVICE_URL) as client:
         # логин суперпользователя
-        query_data = {"login": test_settings.SU_login, "password": test_settings.SU_password}
+        query_data = {
+            "login": test_settings.SU_login,
+            "password": test_settings.SU_password,
+        }
         response = await client.post("/api/v1/users/login", params=query_data)
 
         if response.status_code == HTTPStatus.OK:
@@ -35,7 +38,9 @@ async def login_user():
 
         # создание нового пользователя
         query_data = {"login": login, "password": user_pass}
-        response = await client.post("/api/v1/users/user_registration", params=query_data)
+        response = await client.post(
+            "/api/v1/users/user_registration", params=query_data
+        )
         pytest.user_id = response.json()["uuid"]
         if response.status_code == HTTPStatus.OK:
             new_response = await client.post("/api/v1/users/login", params=query_data)
@@ -60,16 +65,10 @@ async def test_user_permissions():  # тест на доступ к ролям �
             "access_token": pytest.access_token_other,
             "refresh_token": pytest.refresh_token_other,
         }
-        response = await client.get(
-            "/api/v1/roles/list",
-            cookies=cookies
-        )
+        response = await client.get("/api/v1/roles/list", cookies=cookies)
         assert response.status_code == HTTPStatus.UNAUTHORIZED
         # куки суперпользователя
-        response = await client.get(
-            "/api/v1/roles/list",
-            cookies=cookies_superuser()
-        )
+        response = await client.get("/api/v1/roles/list", cookies=cookies_superuser())
         assert response.status_code == HTTPStatus.OK
 
 
@@ -90,7 +89,7 @@ async def test_create_role():
         response = await client.post(
             "/api/v1/roles/create",
             params={"type": pytest.role_type},
-            cookies=cookies_superuser()
+            cookies=cookies_superuser(),
         )
         assert response.status_code == HTTPStatus.OK
         assert response.json()["type"] == pytest.role_type
@@ -104,7 +103,7 @@ async def test_create_role_duplicate_name():
         response = await client.post(
             "/api/v1/roles/create",
             params={"type": pytest.role_type},
-            cookies=cookies_superuser()
+            cookies=cookies_superuser(),
         )
         assert response.status_code == HTTPStatus.BAD_REQUEST
 
@@ -117,7 +116,7 @@ async def test_change_role():
         response = await client.put(
             f"/api/v1/roles/change/{pytest.role_id}",
             params={"type": pytest.role_type},
-            cookies=cookies_superuser()
+            cookies=cookies_superuser(),
         )
         assert response.status_code == HTTPStatus.OK
         assert response.json()["type"] == pytest.role_type
@@ -140,7 +139,7 @@ async def test_create_permission():
         response = await client.post(
             "/api/v1/permissions/create_permission",
             params={"name": pytest.permissions_name},
-            cookies=cookies_superuser()
+            cookies=cookies_superuser(),
         )
         assert response.status_code == HTTPStatus.OK
         assert response.json()["name"] == pytest.permissions_name
@@ -153,7 +152,7 @@ async def test_add_user_role():
     async with AsyncClient(base_url=SERVICE_URL) as client:
         response_set_role = await client.post(
             f"/api/v1/roles/set/{pytest.user_id}/{pytest.role_id}",
-            cookies=cookies_superuser()
+            cookies=cookies_superuser(),
         )
         assert response_set_role.status_code == HTTPStatus.OK
         assert response_set_role.json()["id_role"] == pytest.role_id
@@ -163,9 +162,7 @@ async def test_add_user_role():
 async def test_create_role_missing_name():
     async with AsyncClient(base_url=SERVICE_URL) as client:
         response = await client.post(
-            "/api/v1/roles/create",
-            params={},
-            cookies=cookies_superuser()
+            "/api/v1/roles/create", params={}, cookies=cookies_superuser()
         )
         assert (
             response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
@@ -178,7 +175,7 @@ async def test_change_role_nonexistent():
         response = await client.put(
             "/api/v1/roles/change/999",
             params={"type": "Moderator"},
-            cookies=cookies_superuser()
+            cookies=cookies_superuser(),
         )
         assert response.status_code == HTTPStatus.NOT_FOUND
 
@@ -189,7 +186,7 @@ async def test_change_role_missing_name():
         response = await client.put(
             f"/api/v1/roles/change/{pytest.role_id}",
             params={},
-            cookies=cookies_superuser()
+            cookies=cookies_superuser(),
         )
         assert (
             response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
@@ -205,7 +202,7 @@ async def test_add_permissions_nonexistent_role():
                 "role_id": str(uuid.uuid4()),
                 "permissions_id": pytest.permissions_id,
             },
-            cookies=cookies_superuser()
+            cookies=cookies_superuser(),
         )
         assert response.status_code == HTTPStatus.NOT_FOUND
 
@@ -215,11 +212,8 @@ async def test_add_permissions_nonexistent_permission():
     async with AsyncClient(base_url=SERVICE_URL) as client:
         response = await client.post(
             "/api/v1/permissions/assign_permission_to_role",
-            params={
-                "role_id": pytest.role_id,
-                "permissions_id": str(uuid.uuid4())
-            },
-            cookies=cookies_superuser()
+            params={"role_id": pytest.role_id, "permissions_id": str(uuid.uuid4())},
+            cookies=cookies_superuser(),
         )
         assert response.status_code == HTTPStatus.NOT_FOUND
 
@@ -229,11 +223,8 @@ async def test_add_permissions():
     async with AsyncClient(base_url=SERVICE_URL) as client:
         response = await client.post(
             "/api/v1/permissions/assign_permission_to_role",
-            params={
-                "role_id": pytest.role_id,
-                "permissions_id": pytest.permissions_id
-            },
-            cookies=cookies_superuser()
+            params={"role_id": pytest.role_id, "permissions_id": pytest.permissions_id},
+            cookies=cookies_superuser(),
         )
         assert response.status_code == HTTPStatus.OK
 
@@ -243,7 +234,7 @@ async def test_add_user_role_nonexistent_role():
     async with AsyncClient(base_url=SERVICE_URL) as client:
         response = await client.post(
             f"/api/v1/roles/set/{pytest.user_id}/{str(uuid.uuid4())}",
-            cookies=cookies_superuser()
+            cookies=cookies_superuser(),
         )
         assert response.status_code == HTTPStatus.NOT_FOUND
 
@@ -253,7 +244,7 @@ async def test_add_user_role_nonexistent_user():
     async with AsyncClient(base_url=SERVICE_URL) as client:
         response = await client.post(
             f"/api/v1/roles/set/{str(uuid.uuid4())}/{pytest.role_id}",
-            cookies=cookies_superuser()
+            cookies=cookies_superuser(),
         )
         assert response.status_code == HTTPStatus.NOT_FOUND
 
@@ -267,7 +258,7 @@ async def test_delete_permissions_nonexistent_role():
                 "role_id": str(uuid.uuid4()),
                 "permissions_id": pytest.permissions_id,
             },
-            cookies=cookies_superuser()
+            cookies=cookies_superuser(),
         )
         assert response.status_code == HTTPStatus.NOT_FOUND
 
@@ -277,11 +268,8 @@ async def test_delete_permissions_nonexistent_permission():
     async with AsyncClient(base_url=SERVICE_URL) as client:
         response = await client.post(
             "/api/v1/permissions/remove_permission_from_role",
-            params={
-                "role_id": pytest.role_id,
-                "permissions_id": str(uuid.uuid4())
-            },
-            cookies=cookies_superuser()
+            params={"role_id": pytest.role_id, "permissions_id": str(uuid.uuid4())},
+            cookies=cookies_superuser(),
         )
         assert response.status_code == HTTPStatus.NOT_FOUND
 
@@ -292,11 +280,8 @@ async def test_delete_permissions():
     async with AsyncClient(base_url=SERVICE_URL) as client:
         response = await client.post(
             "/api/v1/permissions/remove_permission_from_role",
-            params={
-                "role_id": pytest.role_id,
-                "permissions_id": pytest.permissions_id
-            },
-            cookies=cookies_superuser()
+            params={"role_id": pytest.role_id, "permissions_id": pytest.permissions_id},
+            cookies=cookies_superuser(),
         )
         assert response.status_code == HTTPStatus.OK
 
@@ -307,8 +292,7 @@ async def test_delete_role_from_user():
     async with AsyncClient(base_url=SERVICE_URL) as client:
         # назначенная пользователю роль
         response = await client.post(
-            f"/api/v1/roles/delete/{pytest.user_id}",
-            cookies=cookies_superuser()
+            f"/api/v1/roles/delete/{pytest.user_id}", cookies=cookies_superuser()
         )
         assert response.status_code == HTTPStatus.OK
 
@@ -318,8 +302,7 @@ async def test_delete_role_from_user():
 async def test_delete_role_nonexistent():
     async with AsyncClient(base_url=SERVICE_URL) as client:
         response = await client.delete(
-            f"/api/v1/roles/{str(uuid.uuid4())}",
-            cookies=cookies_superuser()
+            f"/api/v1/roles/{str(uuid.uuid4())}", cookies=cookies_superuser()
         )
         assert response.status_code == HTTPStatus.NOT_FOUND
 
@@ -329,7 +312,6 @@ async def test_delete_role_nonexistent():
 async def test_delete_role():
     async with AsyncClient(base_url=SERVICE_URL) as client:
         response = await client.delete(
-            f"/api/v1/roles/{pytest.role_id}",
-            cookies=cookies_superuser()
+            f"/api/v1/roles/{pytest.role_id}", cookies=cookies_superuser()
         )
         assert response.status_code == HTTPStatus.OK
