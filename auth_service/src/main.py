@@ -19,7 +19,6 @@ from core.config import settings
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     redis_db.redis = Redis(host=settings.redis_host, port=settings.redis_port)
-    await postgres_db.create_database()
     yield
     await redis_db.redis.close()
 
