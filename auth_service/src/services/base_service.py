@@ -16,7 +16,7 @@ from db.redis_db import RedisCache
 from db.postgres_db import AsyncSession
 from models.entity import User, Authentication, Roles, Permissions
 from core.config import settings
-from services.utils import decode_jwt
+from services.utils import decode_jwt, check_date_and_type_token, ACCESS_TOKEN_TYPE
 from models.value_objects import Role_names
 
 
@@ -74,7 +74,7 @@ class BaseService(AbstractBaseService):
 
     @backoff.on_exception(backoff.expo, conn_err_pg, max_tries=5)
     async def get_user_by_login(self, login):
-        stmt = select(User).filter(User.login == login)
+        stmt = select(User).filter(User.login == login).options(selectinload(User.role))
         result = await self.storage.execute(stmt)
         user = result.scalars().first()
         return user
@@ -156,7 +156,7 @@ class BaseService(AbstractBaseService):
         user: User = await self.storage.get(User, user_id)
         role = await self.storage.get(Roles, role_id)
         if user is not None and role is not None:
-            user.role_id = role_id
+            user.role = role
             self.storage.add(user)
             await self.storage.commit()
             await self.storage.refresh(user)
@@ -276,32 +276,36 @@ class BaseService(AbstractBaseService):
     async def has_permission(self, access_token: str) -> bool:
         """Проверка разрешений пользователя на основе токена."""
         payload = decode_jwt(jwt_token=access_token)
-        if self.is_admin(payload):
+        if await self.is_admin(payload):
             return True
         else:
             return False
 
-    async def allow_for_change(self, access_token: str, user_id):
+    async def allow_for_change(self, access_token: str, user_id: str = None):
         payload = decode_jwt(jwt_token=access_token)
-        check_superuser = await self.is_superuser(payload)
+        if check_date_and_type_token(payload, ACCESS_TOKEN_TYPE):
+            if not await self.get_from_black_list(access_token):
+                check_superuser = await self.is_superuser(payload)
 
-        if check_superuser:
-            return True
+                if check_superuser:
+                    return True
 
-        has_permission = await self.has_permission(access_token)
-        if has_permission:
-            user_role = self.get_user_role(user_id)
+                has_permission = await self.has_permission(access_token)
+                if has_permission:
+                    if user_id:
+                        user_role = await self.get_user_role(user_id)
 
-            if user_role == Role_names.admin:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Admins can't deassign for other admins or superuser.")
+                        if user_role == Role_names.admin:
+                            raise HTTPException(
+                                status_code=status.HTTP_401_UNAUTHORIZED,
+                                detail="Admins can't deassign for other admins or superuser.")
 
-            else:
-                return True
+                        else:
+                            return True
+                    else:
+                        return True
 
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="You are not authorized to perform this action.",
-            )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="You are not authorized to perform this action.",
+        )

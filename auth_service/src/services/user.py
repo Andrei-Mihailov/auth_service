@@ -68,8 +68,8 @@ class UserService(BaseService):
 
     async def login(self, user_login: str, user_password: str) -> Tokens:
         user = await self.get_validate_user(user_login, user_password)
-
-        access_token = create_access_token(user, user.role)
+        user_role = user.role.type if user.role else None
+        access_token = create_access_token(user, user_role)
         refresh_token = create_refresh_token(user)
 
         # добавление refresh токена в вайт-лист редиса

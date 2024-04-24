@@ -89,7 +89,7 @@ async def change(
 
 
 # /api/v1/roles/list
-@router.post(
+@router.get(
     "/list",
     response_model=list[RolesPermissionsSchema],
     status_code=status.HTTP_200_OK,
@@ -99,9 +99,11 @@ async def change(
     tags=["Роли"],
 )
 async def list_roles(
+    request: Request,
     role_service: Annotated[RoleService, Depends(get_role_service)]
 ) -> list[RolesPermissionsSchema]:
-    roles_data = await role_service.elements()
+    token = get_tokens_from_cookie(request)
+    roles_data = await role_service.elements(token.access_token)
 
     list_roles_scheme = []
     if roles_data:

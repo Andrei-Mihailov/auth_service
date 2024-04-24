@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from models.value_objects import UserID, RoleID, PermissionID
 from typing import Union
 

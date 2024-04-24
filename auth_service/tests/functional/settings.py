@@ -1,14 +1,17 @@
 from os import environ as env
 from dotenv import load_dotenv
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
 from pydantic import Field
 
-load_dotenv(".tests.env")
+load_dotenv(".dev.env")
 
 
 class TestSettings(BaseSettings):
     SERVICE_HOST: str = Field(default={env.get("SERVICE_HOST")})
     SERVICE_PORT: int = Field(default={env.get("SERVICE_PORT")})
+
+    SU_login: str
+    SU_password: str
 
     @property
     def SERVISE_URL(self):

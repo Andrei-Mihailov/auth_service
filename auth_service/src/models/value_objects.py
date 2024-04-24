@@ -1,6 +1,5 @@
 from typing import NewType
 
-from enum import auto
 from strenum import StrEnum
 from uuid import UUID
 
@@ -14,6 +13,6 @@ PermissionID = NewType("PermissionID", UUID)
 class Role_names(StrEnum):
     """Роли пользователя на сайте."""
 
-    admin = auto()
-    user = auto()
-    guest = auto()
+    admin = "admin"
+    user = "user"
+    guest = "guest"

@@ -34,23 +34,23 @@ services:
     container_name: solution-auth-test
     depends_on:
       redis:
-         condition: service_healthy
+        condition: service_healthy
       db:
-         condition: service_healthy
+        condition: service_healthy
     env_file:
       - ./.env
-  
+
   tests:
     build: .
     command: pytest -v src
     container_name: test-auth-test
     depends_on:
       redis:
-         condition: service_healthy
+        condition: service_healthy
       db:
-         condition: service_healthy
+        condition: service_healthy
       app:
-         condition: service_started
+        condition: service_started
     env_file:
       - ./.env
 

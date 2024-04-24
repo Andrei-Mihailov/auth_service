@@ -13,7 +13,7 @@ class PermissionService(BaseService):
         self.model = Permissions
 
     async def create_permission(self, params: dict, access_token: str) -> Permissions:
-        if self.allow_for_change(access_token):
+        if await self.allow_for_change(access_token):
             permission = await self.create_new_instance(params)
             return permission
         else:
@@ -23,7 +23,7 @@ class PermissionService(BaseService):
             )
 
     async def assign_permission_to_role(self, data: dict, access_token: str) -> bool:
-        if self.allow_for_change(access_token):
+        if await self.allow_for_change(access_token):
             role = await self.permission_to_role(
                 str(data.permissions_id), str(data.role_id)
             )
@@ -38,7 +38,7 @@ class PermissionService(BaseService):
             )
 
     async def remove_permission_from_role(self, data: dict, access_token: str) -> bool:
-        if self.allow_for_change(access_token):
+        if await self.allow_for_change(access_token):
             return await self.permission_from_role(
                 str(data.permissions_id), str(data.role_id)
             )

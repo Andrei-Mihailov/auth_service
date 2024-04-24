@@ -5,7 +5,7 @@ from datetime import timedelta, datetime, timezone
 from fastapi import HTTPException, status
 
 from core.config import settings
-from models.user import User
+
 from models.value_objects import Role_names
 
 ACCESS_TOKEN_TYPE = "access"
@@ -25,7 +25,7 @@ def create_jwt(token_type: str, token_data: dict, expire_minutes: int) -> str:
     return encode_jwt(jwt_payload)
 
 
-def create_access_token(user: User, user_role: Role_names = Role_names.user):
+def create_access_token(user, user_role: Role_names = Role_names.user):
     # в теле токена хранится UUID пользователя, его роли и UUID самого токена
     payload = {
         "sub": str(user.id),  # userid
@@ -39,7 +39,7 @@ def create_access_token(user: User, user_role: Role_names = Role_names.user):
     )
 
 
-def create_refresh_token(user: User):
+def create_refresh_token(user):
     payload = {"sub": str(user.id), "self_uuid": str(uuid.uuid4())}
     return create_jwt(
         REFRESH_TOKEN_TYPE, payload, settings.auth_jwt.refresh_token_expire_minutes
