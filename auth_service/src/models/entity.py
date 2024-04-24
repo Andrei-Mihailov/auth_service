@@ -87,7 +87,7 @@ class Authentication(Base):
         unique=True,
         nullable=False,
     )
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id",  ondelete="CASCADE"))
     user_agent: Mapped[str] = mapped_column(String(255), nullable=False)
     date_auth: Mapped[DateTime] = mapped_column(DateTime, default=datetime.now)
 
