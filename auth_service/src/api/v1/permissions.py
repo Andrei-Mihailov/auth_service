@@ -7,7 +7,7 @@ from api.v1.schemas.roles import (
     RolePermissionsParams,
 )
 from services.permission import PermissionService, get_permission_service
-from service import get_tokens_from_cookie
+from .service import get_tokens_from_cookie
 
 
 router = APIRouter()

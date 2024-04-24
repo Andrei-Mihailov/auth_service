@@ -16,12 +16,9 @@ from db import redis_db
 from core.config import settings
 
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     redis_db.redis = Redis(host=settings.redis_host, port=settings.redis_port)
-    from models.entity import Permissions, Roles, User, Authentication
-
     await postgres_db.create_database()
     yield
     await redis_db.redis.close()

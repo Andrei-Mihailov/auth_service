@@ -1,8 +1,8 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, status, HTTPException, Request
 from sqlalchemy.exc import MissingGreenlet
-from service import get_tokens_from_cookie
 
+from .service import get_tokens_from_cookie
 from api.v1.schemas.roles import (
     RolesSchema,
     RoleParams,

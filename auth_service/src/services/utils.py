@@ -6,7 +6,6 @@ from fastapi import HTTPException, status
 
 from core.config import settings
 from models.user import User
-from base_service import get_user_role
 from models.value_objects import Role_names
 
 ACCESS_TOKEN_TYPE = "access"

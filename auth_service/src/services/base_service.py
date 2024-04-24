@@ -5,7 +5,8 @@ from abc import ABC
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import DBAPIError
-from fastapi.encoders import jsonable_encoder, HTTPException, status
+from fastapi.encoders import jsonable_encoder
+from fastapi import HTTPException, status
 from typing import Union
 
 
@@ -291,7 +292,7 @@ class BaseService(AbstractBaseService):
         if has_permission:
             user_role = self.get_user_role(user_id)
 
-            if user_role == Role_names.admin :
+            if user_role == Role_names.admin:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Admins can't deassign for other admins or superuser.")

@@ -53,7 +53,7 @@ class User(Base):
     created_at: Mapped[DateTime] = mapped_column(DateTime, default=datetime.now)
     active: Mapped[Boolean] = mapped_column(Boolean, default=True)
     role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"), default=None, nullable=True)
-    role: Mapped[Roles] = relationship("Role", back_populates="users")
+    role: Mapped[Roles] = relationship("Roles", back_populates="users")
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
 
     def __init__(

@@ -1,22 +1,20 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, status, HTTPException, Request, Response
-from pydantic_core import ValidationError
+
 
 from api.v1.schemas.auth import (
     AuthenticationSchema,
     TokenSchema,
     AuthenticationParams,
-    AuthenticationData,
-    TokenParams,
+    AuthenticationData
 )
 from api.v1.schemas.users import UserParams, UserSchema, UserEditParams
 from api.v1.schemas.roles import PermissionsParams
 from services.user import UserService, get_user_service
 from services.auth import AuthService, get_auth_service
-from service import get_tokens_from_cookie
+from .service import get_tokens_from_cookie
 
 router = APIRouter()
-
 
 
 # /api/v1/users/login
