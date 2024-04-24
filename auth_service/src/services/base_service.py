@@ -114,11 +114,12 @@ class BaseService(AbstractBaseService):
         return instance
 
     @backoff.on_exception(backoff.expo, conn_err_pg, max_tries=5)
-    async def get_login_history(self, user_uuid: str):
+    async def get_login_history(self, user_uuid: str, limit: int = 10, offset: int = 0):
         user = await self.storage.get(User, user_uuid)
         if user is None:
             return None
-        stmt = select(self.model).filter(self.model.user_id == user_uuid)
+
+        stmt = select(self.model).filter(self.model.user_id == user_uuid).offset(offset).limit(limit)
         result = await self.storage.execute(stmt)
         instance = result.scalars().all()
         return instance
