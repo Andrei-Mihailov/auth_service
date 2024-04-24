@@ -19,7 +19,7 @@ class AuthService(BaseService):
         # добавление в бд pg данных об аутентификации модель Authentication
         await self.create_new_instance(auth_params)
 
-    async def login_history(self, access_token: str) -> list[Authentication]:
+    async def login_history(self, access_token: str, limit: int = 10, offset: int = 0) -> list[Authentication]:
 
         payload = decode_jwt(jwt_token=access_token)
         user_uuid = payload.get("sub")
@@ -27,7 +27,7 @@ class AuthService(BaseService):
             # проверка наличия access токена в блэк-листе бд redis (плохо, если он там есть)
             if not await self.get_from_black_list(access_token):
                 # получить историю авторизаций по id_user_history модель Authentication
-                auths_list = await self.get_login_history(user_uuid)
+                auths_list = await self.get_login_history(user_uuid, limit=limit, offset=offset)
                 if auths_list is None:
                     raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND, detail="user not found"
