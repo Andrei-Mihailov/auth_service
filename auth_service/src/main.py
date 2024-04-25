@@ -59,8 +59,12 @@ class StandaloneApplication(gunicorn.app.base.BaseApplication):
 
 
 app.include_router(users.router, prefix="/api/v1/users")
-app.include_router(roles.router, prefix='/api/v1/roles', dependencies=[Depends(check_jwt)])
-app.include_router(permissions.router, prefix="/api/v1/permissions", dependencies=[Depends(check_jwt)])
+app.include_router(
+    roles.router, prefix="/api/v1/roles", dependencies=[Depends(check_jwt)]
+)
+app.include_router(
+    permissions.router, prefix="/api/v1/permissions", dependencies=[Depends(check_jwt)]
+)
 
 
 def async_cmd(func):

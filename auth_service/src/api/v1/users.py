@@ -67,10 +67,10 @@ async def user_registration(
             first_name=user.first_name,
             last_name=user.last_name,
         )
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="This email already exists"
-        )
+
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST, detail="This email already exists"
+    )
 
 
 # /api/v1/users/change_user_info
@@ -82,7 +82,7 @@ async def user_registration(
     description="Редактирование логина, имени и пароля пользователя",
     response_description="Ид, логин, имя, дата регистрации",
     tags=["Пользователи"],
-    dependencies=[Depends(check_jwt)]
+    dependencies=[Depends(check_jwt)],
 )
 async def change_user_info(
     request: Request,
@@ -107,7 +107,7 @@ async def change_user_info(
     summary="Выход пользователя",
     description="Выход текущего авторизованного пользователя",
     tags=["Пользователи"],
-    dependencies=[Depends(check_jwt)]
+    dependencies=[Depends(check_jwt)],
 )
 async def logout(
     request: Request, user_service: UserService = Depends(get_user_service)
@@ -127,7 +127,7 @@ async def logout(
     description="Запрос access токена",
     response_description="Access токен",
     tags=["Пользователи"],
-    dependencies=[Depends(check_jwt)]
+    dependencies=[Depends(check_jwt)],
 )
 async def refresh_token(
     request: Request, user_service: UserService = Depends(get_user_service)
@@ -151,7 +151,7 @@ async def refresh_token(
     description="Запрос истории авторизаций пользователя",
     response_description="Ид, ид пользователя, юзер агент, дата аутентификации",
     tags=["Пользователи"],
-    dependencies=[Depends(check_jwt)]
+    dependencies=[Depends(check_jwt)],
 )
 async def get_login_history(
     request: Request,
@@ -160,9 +160,7 @@ async def get_login_history(
 ) -> list[AuthenticationSchema]:
     tokens = get_tokens_from_cookie(request)
     auth_data = await auth_service.login_history(
-        tokens.access_token,
-        pagination_params.page_size,
-        pagination_params.page_number
+        tokens.access_token, pagination_params.page_size, pagination_params.page_number
     )
 
     list_auth_scheme = []
@@ -186,7 +184,7 @@ async def get_login_history(
     description="Проверка разрешения опредленных действий пользователя",
     response_description="Результат проверки: успешно или нет",
     tags=["Пользователи"],
-    dependencies=[Depends(check_jwt)]
+    dependencies=[Depends(check_jwt)],
 )
 async def check_permission(
     request: Request,
@@ -195,6 +193,5 @@ async def check_permission(
 ) -> bool:
     tokens = get_tokens_from_cookie(request)
     return await user_service.check_permissions(
-        tokens.access_token,
-        permission_params.name
+        tokens.access_token, permission_params.name
     )

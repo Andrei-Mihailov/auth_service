@@ -22,8 +22,7 @@ class PermissionService(BaseService):
         )
         if role is not None:
             return True
-        else:
-            return False
+        return False
 
     async def remove_permission_from_role(self, data: dict) -> bool:
         return await self.permission_from_role(

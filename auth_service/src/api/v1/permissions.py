@@ -29,16 +29,14 @@ async def create_permission(
     permission_params: Annotated[PermissionsParams, Depends()],
     permission_service: PermissionService = Depends(get_permission_service),
 ) -> PermissionsSchema:
-    perm = await permission_service.create_permission(
-        permission_params
-    )
+    perm = await permission_service.create_permission(permission_params)
     if perm is not None:
         return PermissionsSchema(uuid=perm.id, name=perm.name)
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This permission already exists",
-        )
+
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="This permission already exists",
+    )
 
 
 # /api/v1/permissions/assign_permission_to_role
@@ -57,13 +55,11 @@ async def assign_permission_to_role(
     permission_params: Annotated[RolePermissionsParams, Depends()],
     permission_service: PermissionService = Depends(get_permission_service),
 ) -> bool:
-    result = await permission_service.assign_permission_to_role(
-        permission_params
-    )
+    result = await permission_service.assign_permission_to_role(permission_params)
     if result:
         return True
-    else:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 
 # /api/v1/permissions/remove_permission_from_role
@@ -82,10 +78,8 @@ async def remove_permission_from_role(
     permission_params: Annotated[RolePermissionsParams, Depends()],
     permission_service: PermissionService = Depends(get_permission_service),
 ) -> bool:
-    result = await permission_service.remove_permission_from_role(
-        permission_params
-    )
+    result = await permission_service.remove_permission_from_role(permission_params)
     if result:
         return True
-    else:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

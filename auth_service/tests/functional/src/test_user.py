@@ -68,10 +68,7 @@ async def test_registration_user(make_post_request, query_data, expected_answer)
             {"email": new_email, "password": "testtest"},
             {"status": HTTPStatus.FORBIDDEN},
         ),
-
-        (
-            {"email": new_email, "password": new_user_pass},
-            {"status": HTTPStatus.OK}),
+        ({"email": new_email, "password": new_user_pass}, {"status": HTTPStatus.OK}),
         (
             {"email": str(uuid.uuid4()), "password": "user"},
             {"status": HTTPStatus.NOT_FOUND},

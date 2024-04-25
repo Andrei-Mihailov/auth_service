@@ -36,10 +36,10 @@ async def create(
     role = await role_service.create(role_params)
     if role is not None:
         return RolesSchema(uuid=role.id, type=role.type)
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="This role already exists"
-        )
+
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST, detail="This role already exists"
+    )
 
 
 # /api/v1/roles/{id_role}
@@ -59,8 +59,8 @@ async def delete(
     result = await role_service.delete(id_role)
     if result:
         return None
-    else:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 
 # /api/v1/roles/change/{id_role}
@@ -83,8 +83,8 @@ async def change(
     role = await role_service.update(id_role, role_params)
     if role is not None:
         return RolesSchema(uuid=role.id, type=role.type)
-    else:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 
 # /api/v1/roles/list
@@ -99,8 +99,7 @@ async def change(
 )
 @allow_this_user
 async def list_roles(
-    request: Request,
-    role_service: Annotated[RoleService, Depends(get_role_service)]
+    request: Request, role_service: Annotated[RoleService, Depends(get_role_service)]
 ) -> list[RolesPermissionsSchema]:
     roles_data = await role_service.elements()
 
@@ -140,8 +139,8 @@ async def add_user_role(
     result = await role_service.assign_role(user_id, id_role)
     if result is not None:
         return UserRoleSchema(id_role=id_role, user_id=user_id)
-    else:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
 
 # /api/v1/roles/delete/{user_id}

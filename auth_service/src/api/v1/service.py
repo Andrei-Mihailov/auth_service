@@ -28,15 +28,14 @@ def get_tokens_from_cookie(request: Request) -> TokenParams:
         return token
     except (ValidationError, AttributeError):
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Tokens is not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Tokens is not found"
         )
 
 
 async def check_jwt(request: Request, service: UserService = Depends(get_user_service)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials"
+        detail="Could not validate credentials",
     )
     tokens = get_tokens_from_cookie(request)
     payload = decode_jwt(jwt_token=tokens.access_token)
@@ -44,8 +43,7 @@ async def check_jwt(request: Request, service: UserService = Depends(get_user_se
         # проверка access токена в блэк листе redis
         if await service.get_from_black_list(tokens.access_token):
             raise credentials_exception
-    else:
-        raise credentials_exception
+    raise credentials_exception
 
 
 async def is_admin(payload: dict) -> bool:
@@ -65,17 +63,17 @@ async def has_permission(access_token: str) -> bool:
     payload = decode_jwt(jwt_token=access_token)
     if await is_admin(payload):
         return True
-    else:
-        return False
+    return False
 
 
 def allow_this_user(function):
     @wraps(function)
     async def wrapper(*args, **kwargs):
-        request = kwargs.get('request', None)
+        request = kwargs.get("request", None)
         service: Union[RoleService, PermissionService] = kwargs.get(
-            'role_service', kwargs.get('permission_service', None))
-        user_id = kwargs.get('user_id', None)
+            "role_service", kwargs.get("permission_service", None)
+        )
+        user_id = kwargs.get("user_id", None)
         tokens = get_tokens_from_cookie(request)
         payload = decode_jwt(jwt_token=tokens.access_token)
         check_superuser = await is_superuser(payload)
@@ -91,7 +89,7 @@ def allow_this_user(function):
                 if user_role == Role_names.admin:
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
-                        detail='This operation is forbidden for you',
+                        detail="This operation is forbidden for you",
                     )
 
                 else:
@@ -101,6 +99,7 @@ def allow_this_user(function):
         else:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail='This operation is forbidden for you',
+                detail="This operation is forbidden for you",
             )
+
     return wrapper
