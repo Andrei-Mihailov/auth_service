@@ -73,11 +73,11 @@ class UserService(BaseService):
         refresh_token = create_refresh_token(user)
 
         # добавление refresh токена в вайт-лист редиса
-        await self.add_to_white_list(refresh_token, "refresh")
+        await self.add_to_white_list(refresh_token, REFRESH_TOKEN_TYPE)
         return Tokens(access_token=access_token, refresh_token=refresh_token), user
 
     async def logout(self, access_token: str, refresh_token: str) -> bool:
-        await self.add_to_black_list(access_token, "access")
+        await self.add_to_black_list(access_token, ACCESS_TOKEN_TYPE)
         await self.del_from_white_list(refresh_token)
         return True
 
@@ -97,11 +97,11 @@ class UserService(BaseService):
                 new_access_token = create_access_token(user, user.role)
                 new_refresh_token = create_refresh_token(user)
                 # добавить старый access токен в блэк-лист redis
-                await self.add_to_black_list(access_token, "access")
+                await self.add_to_black_list(access_token, ACCESS_TOKEN_TYPE)
                 # удалить старый refresh токен из вайт-листа redis
                 await self.del_from_white_list(refresh_token)
                 # добавить новый refresh токен в вайт-лист redis
-                await self.add_to_white_list(new_refresh_token, "refresh")
+                await self.add_to_white_list(new_refresh_token, REFRESH_TOKEN_TYPE)
                 return Tokens(
                     access_token=new_access_token, refresh_token=new_refresh_token
                 )
@@ -116,32 +116,22 @@ class UserService(BaseService):
         """Проверка прав доступа у пользователя."""
         payload = self.token_decode(access_token)
         user_uuid = payload.get("sub")
+        user = await self.get_instance_by_id(user_uuid)
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="user not found",
+            )
+        try:
+            user_role = await self.get_user_role(user_uuid)
+            user_permissions = []
+            for perm in user_role._data[0].permissions:
+                user_permissions.append(perm.name)
 
-        if check_date_and_type_token(payload, ACCESS_TOKEN_TYPE):
-            user = await self.get_instance_by_id(user_uuid)
-            if user is None:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="user not found",
-                )
-            # проверка access токена в блэк листе redis
-            if not await self.get_from_black_list(access_token):
-                try:
-                    user_role = await self.get_user_role(user_uuid)
-                    user_permissions = []
-                    for perm in user_role._data[0].permissions:
-                        user_permissions.append(perm.name)
-
-                    if required_permissions not in user_permissions:
-                        return False
-                except AttributeError:
-                    return False
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN, detail="uncorrect token"
-                )
-
-        return True
+            if required_permissions not in user_permissions:
+                return False
+        except AttributeError:
+            return False
 
 
 @lru_cache()

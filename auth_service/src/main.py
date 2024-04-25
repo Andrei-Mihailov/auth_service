@@ -5,7 +5,7 @@ import asyncio
 import functools as ft
 import sys
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.responses import ORJSONResponse
 from redis.asyncio import Redis
 from contextlib import asynccontextmanager
@@ -14,6 +14,7 @@ from api.v1 import users, roles, permissions
 from db import postgres_db
 from db import redis_db
 from core.config import settings
+from api.v1.service import check_jwt
 
 
 @asynccontextmanager
@@ -58,8 +59,8 @@ class StandaloneApplication(gunicorn.app.base.BaseApplication):
 
 
 app.include_router(users.router, prefix="/api/v1/users")
-app.include_router(roles.router, prefix="/api/v1/roles")
-app.include_router(permissions.router, prefix="/api/v1/permissions")
+app.include_router(roles.router, prefix='/api/v1/roles', dependencies=[Depends(check_jwt)])
+app.include_router(permissions.router, prefix="/api/v1/permissions", dependencies=[Depends(check_jwt)])
 
 
 def async_cmd(func):

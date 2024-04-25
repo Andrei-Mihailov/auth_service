@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from functools import lru_cache
 
 from models.entity import Permissions
@@ -12,41 +12,23 @@ class PermissionService(BaseService):
         super().__init__(cache, storage)
         self.model = Permissions
 
-    async def create_permission(self, params: dict, access_token: str) -> Permissions:
-        if await self.allow_for_change(access_token):
-            permission = await self.create_new_instance(params)
-            return permission
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="you are not superuser",
-            )
+    async def create_permission(self, params: dict) -> Permissions:
+        permission = await self.create_new_instance(params)
+        return permission
 
-    async def assign_permission_to_role(self, data: dict, access_token: str) -> bool:
-        if await self.allow_for_change(access_token):
-            role = await self.permission_to_role(
-                str(data.permissions_id), str(data.role_id)
-            )
-            if role is not None:
-                return True
-            else:
-                return False
+    async def assign_permission_to_role(self, data: dict) -> bool:
+        role = await self.permission_to_role(
+            str(data.permissions_id), str(data.role_id)
+        )
+        if role is not None:
+            return True
         else:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="you are not admin user",
-            )
+            return False
 
-    async def remove_permission_from_role(self, data: dict, access_token: str) -> bool:
-        if await self.allow_for_change(access_token):
-            return await self.permission_from_role(
-                str(data.permissions_id), str(data.role_id)
-            )
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="you are not superuser",
-            )
+    async def remove_permission_from_role(self, data: dict) -> bool:
+        return await self.permission_from_role(
+            str(data.permissions_id), str(data.role_id)
+        )
 
 
 @lru_cache()

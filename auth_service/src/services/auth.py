@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.entity import Authentication
 from .base_service import BaseService
-from .utils import decode_jwt, check_date_and_type_token, ACCESS_TOKEN_TYPE
+from .utils import decode_jwt
 
 from db.postgres_db import get_session
 from db.redis_db import RedisCache, get_redis
@@ -25,22 +25,15 @@ class AuthService(BaseService):
 
         payload = decode_jwt(jwt_token=access_token)
         user_uuid = payload.get("sub")
-        if check_date_and_type_token(payload, ACCESS_TOKEN_TYPE):
-            # проверка наличия access токена в блэк-листе бд redis (плохо, если он там есть)
-            if not await self.get_from_black_list(access_token):
-                # получить историю авторизаций по id_user_history модель Authentication
-                auths_list = await self.get_login_history(
-                    user_uuid, limit=limit, offset=offset
-                )
-                if auths_list is None:
-                    raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND, detail="user not found"
-                    )
-                return auths_list
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN, detail="uncorrect token"
-                )
+        # получить историю авторизаций по id_user_history модель Authentication
+        auths_list = await self.get_login_history(
+            user_uuid, limit=limit, offset=offset
+        )
+        if auths_list is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="user not found"
+            )
+        return auths_list
 
 
 @lru_cache()

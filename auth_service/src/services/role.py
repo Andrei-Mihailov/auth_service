@@ -2,7 +2,7 @@ from .base_service import BaseService
 from uuid import UUID
 from functools import lru_cache
 from typing import Union
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 
 from core.constains import DEFAULT_ROLE_DATA
 from models.entity import Roles
@@ -24,46 +24,25 @@ class RoleService(BaseService):
         """Получить роль по названию."""
         return await self.get_instance_by_name(role_name)
 
-    async def create(self, role_data: dict, access_token: str) -> Roles:
+    async def create(self, role_data: dict) -> Roles:
         """Создание роли."""
-        if await self.allow_for_change(access_token):
-            return await self.create_new_instance(role_data)
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="you are not superuser",
-            )
+        return await self.create_new_instance(role_data)
 
-    async def update(self, role_id: str, update_data: dict, access_token: str) -> Roles:
-        if await self.allow_for_change(access_token):
-            return await self.change_instance_data(role_id, update_data)
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="you are not superuser",
-            )
+    async def update(self, role_id: str, update_data: dict) -> Roles:
+        return await self.change_instance_data(role_id, update_data)
 
-    async def delete(self, role_id: str, access_token: str) -> Roles:
+    async def delete(self, role_id: str) -> Roles:
         """Удаление роли."""
-        if await self.allow_for_change(access_token):
-            return await self.del_instance_by_id(role_id)
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="you are not superuser",
-            )
+        return await self.del_instance_by_id(role_id)
 
-    async def elements(self, access_token: str):
-        if await self.allow_for_change(access_token):
-            return await self.get_all_instance()
+    async def elements(self):
+        return await self.get_all_instance()
 
-    async def assign_role(self, user_id: str, role_id: str, access_token: str) -> User:
-        if await self.allow_for_change(access_token, user_id):
-            return await self.set_user_role(user_id, role_id)
+    async def assign_role(self, user_id: str, role_id: str) -> User:
+        return await self.set_user_role(user_id, role_id)
 
-    async def deassign_role(self, user_id: str, access_token: str) -> User:
-        if await self.allow_for_change(access_token, user_id):
-            return await self.del_user_role(user_id)
+    async def deassign_role(self, user_id: str) -> User:
+        return await self.del_user_role(user_id)
 
     async def get_default_role(self) -> Roles:
         if not (default_role := await self.get_by_name(DEFAULT_ROLE_DATA["name"])):
@@ -71,10 +50,9 @@ class RoleService(BaseService):
 
         return default_role
 
-    async def revoke_role(self, role: Roles, user: User, access_token: str) -> User:
+    async def revoke_role(self, role: Roles, user: User) -> User:
         """Отзыв роли у пользователя."""
-        if await self.allow_for_change(access_token, user.user_id):
-            return await self.del_user_role(user, role)
+        return await self.del_user_role(user, role)
 
 
 @lru_cache()

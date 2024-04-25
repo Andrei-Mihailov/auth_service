@@ -67,7 +67,7 @@ async def test_user_permissions():  # тест на доступ к ролям �
             "refresh_token": pytest.refresh_token_other,
         }
         response = await client.get("/api/v1/roles/list", cookies=cookies)
-        assert response.status_code == HTTPStatus.UNAUTHORIZED
+        assert response.status_code == HTTPStatus.NOT_FOUND
         # куки суперпользователя
         response = await client.get("/api/v1/roles/list", cookies=cookies_superuser())
         assert response.status_code == HTTPStatus.OK

@@ -8,6 +8,7 @@ from api.v1.schemas.auth import (
     AuthenticationParams,
     AuthenticationData,
 )
+from api.v1.service import check_jwt
 from api.v1.schemas.users import UserParams, UserSchema, UserEditParams
 from api.v1.schemas.roles import PermissionsParams
 from services.user import UserService, get_user_service
@@ -81,13 +82,13 @@ async def user_registration(
     description="Редактирование логина, имени и пароля пользователя",
     response_description="Ид, логин, имя, дата регистрации",
     tags=["Пользователи"],
+    dependencies=[Depends(check_jwt)]
 )
 async def change_user_info(
     request: Request,
     user_params: Annotated[UserEditParams, Depends()],
     user_service: UserService = Depends(get_user_service),
 ) -> UserSchema:
-
     tokens = get_tokens_from_cookie(request)
     change_user = await user_service.change_user_info(tokens.access_token, user_params)
     return UserSchema(
@@ -106,6 +107,7 @@ async def change_user_info(
     summary="Выход пользователя",
     description="Выход текущего авторизованного пользователя",
     tags=["Пользователи"],
+    dependencies=[Depends(check_jwt)]
 )
 async def logout(
     request: Request, user_service: UserService = Depends(get_user_service)
@@ -125,12 +127,12 @@ async def logout(
     description="Запрос access токена",
     response_description="Access токен",
     tags=["Пользователи"],
+    dependencies=[Depends(check_jwt)]
 )
 async def refresh_token(
     request: Request, user_service: UserService = Depends(get_user_service)
 ) -> TokenSchema:
     tokens = get_tokens_from_cookie(request)
-
     new_tokens = await user_service.refresh_access_token(
         tokens.access_token, tokens.refresh_token
     )
@@ -149,16 +151,15 @@ async def refresh_token(
     description="Запрос истории авторизаций пользователя",
     response_description="Ид, ид пользователя, юзер агент, дата аутентификации",
     tags=["Пользователи"],
+    dependencies=[Depends(check_jwt)]
 )
 async def get_login_history(
-    request: Request,
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
     pagination_params: Annotated[PaginationParams, Depends()],
 ) -> list[AuthenticationSchema]:
-
-    tokens = get_tokens_from_cookie(request)
     auth_data = await auth_service.login_history(
-        tokens.access_token, pagination_params.page_size, pagination_params.page_number
+        pagination_params.page_size,
+        pagination_params.page_number
     )
 
     list_auth_scheme = []
@@ -182,6 +183,7 @@ async def get_login_history(
     description="Проверка разрешения опредленных действий пользователя",
     response_description="Результат проверки: успешно или нет",
     tags=["Пользователи"],
+    dependencies=[Depends(check_jwt)]
 )
 async def check_permission(
     request: Request,
@@ -190,5 +192,6 @@ async def check_permission(
 ) -> bool:
     tokens = get_tokens_from_cookie(request)
     return await user_service.check_permissions(
-        tokens.access_token, permission_params.name
+        tokens.access_token,
+        permission_params.name
     )

@@ -1,8 +1,7 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, status, HTTPException, Request
+from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.exc import MissingGreenlet
 
-from .service import get_tokens_from_cookie
 from api.v1.schemas.roles import (
     RolesSchema,
     RoleParams,
@@ -11,9 +10,9 @@ from api.v1.schemas.roles import (
     PermissionsSchema,
     RolesPermissionsSchema,
 )
-
-
 from services.role import RoleService, get_role_service
+from api.v1.service import allow_this_user
+
 
 router = APIRouter()
 
@@ -28,13 +27,12 @@ router = APIRouter()
     response_description="Ид, тип, разрешения",
     tags=["Роли"],
 )
+@allow_this_user
 async def create(
-    request: Request,
     role_params: Annotated[RoleParams, Depends()],
     role_service: Annotated[RoleService, Depends(get_role_service)],
 ) -> RolesSchema:
-    token = get_tokens_from_cookie(request)
-    role = await role_service.create(role_params, token.access_token)
+    role = await role_service.create(role_params)
     if role is not None:
         return RolesSchema(uuid=role.id, type=role.type)
     else:
@@ -51,13 +49,12 @@ async def create(
     description="Удаление существующей роли",
     tags=["Роли"],
 )
+@allow_this_user
 async def delete(
-    request: Request,
     id_role: str,
     role_service: Annotated[RoleService, Depends(get_role_service)],
 ) -> None:
-    token = get_tokens_from_cookie(request)
-    result = await role_service.delete(id_role, token.access_token)
+    result = await role_service.delete(id_role)
     if result:
         return None
     else:
@@ -74,14 +71,13 @@ async def delete(
     response_description="Ид, тип, разрешения",
     tags=["Роли"],
 )
+@allow_this_user
 async def change(
-    request: Request,
     id_role: str,
     role_params: Annotated[RoleEditParams, Depends()],
     role_service: Annotated[RoleService, Depends(get_role_service)],
 ) -> RolesSchema:
-    token = get_tokens_from_cookie(request)
-    role = await role_service.update(id_role, role_params, token.access_token)
+    role = await role_service.update(id_role, role_params)
     if role is not None:
         return RolesSchema(uuid=role.id, type=role.type)
     else:
@@ -98,11 +94,11 @@ async def change(
     response_description="Ид, тип, разрешения",
     tags=["Роли"],
 )
+@allow_this_user
 async def list_roles(
-    request: Request, role_service: Annotated[RoleService, Depends(get_role_service)]
+    role_service: Annotated[RoleService, Depends(get_role_service)]
 ) -> list[RolesPermissionsSchema]:
-    token = get_tokens_from_cookie(request)
-    roles_data = await role_service.elements(token.access_token)
+    roles_data = await role_service.elements()
 
     list_roles_scheme = []
     if roles_data:
@@ -130,14 +126,13 @@ async def list_roles(
     response_description="Ид роли, Ид пользователя",
     tags=["Роли"],
 )
+@allow_this_user
 async def add_user_role(
-    request: Request,
     user_id: str,
     id_role: str,
     role_service: Annotated[RoleService, Depends(get_role_service)],
 ) -> UserRoleSchema:
-    token = get_tokens_from_cookie(request)
-    result = await role_service.assign_role(user_id, id_role, token.access_token)
+    result = await role_service.assign_role(user_id, id_role)
     if result is not None:
         return UserRoleSchema(id_role=id_role, user_id=user_id)
     else:
@@ -154,10 +149,9 @@ async def add_user_role(
     response_description="Ид пользователя",
     tags=["Роли"],
 )
+@allow_this_user
 async def del_user_role(
-    request: Request,
     user_id: str,
     role_service: Annotated[RoleService, Depends(get_role_service)],
 ) -> UserRoleSchema:
-    token = get_tokens_from_cookie(request)
-    return await role_service.deassign_role(user_id, token.access_token)
+    return await role_service.deassign_role(user_id)

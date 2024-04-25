@@ -6,7 +6,6 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import DBAPIError
 from fastapi.encoders import jsonable_encoder
-from fastapi import HTTPException, status
 from typing import Union
 
 
@@ -16,8 +15,7 @@ from db.redis_db import RedisCache
 from db.postgres_db import AsyncSession
 from models.entity import User, Authentication, Roles, Permissions
 from core.config import settings
-from services.utils import decode_jwt, check_date_and_type_token, ACCESS_TOKEN_TYPE
-from models.value_objects import Role_names
+from services.utils import decode_jwt
 
 
 class AbstractBaseService(ABC):
@@ -268,51 +266,3 @@ class BaseService(AbstractBaseService):
         payload = decode_jwt(jwt_token=token)
         key = "black_list:" + payload.get("self_uuid")
         return await self._get_from_cache(key)
-
-    async def is_admin(self, payload: dict) -> bool:
-        """Проверка, является ли пользователь администратором, используя расшифрованный payload."""
-        user_is_admin = payload.get("is_admin")
-        return user_is_admin
-
-    async def is_superuser(self, payload: dict) -> bool:
-        """Проверка, является ли пользователь суперпользователем, используя расшифрованный payload."""
-        user_is_superuser = payload.get("is_superuser")
-        return user_is_superuser
-
-    async def has_permission(self, access_token: str) -> bool:
-        """Проверка разрешений пользователя на основе токена."""
-        payload = decode_jwt(jwt_token=access_token)
-        if await self.is_admin(payload):
-            return True
-        else:
-            return False
-
-    async def allow_for_change(self, access_token: str, user_id: str = None):
-        payload = decode_jwt(jwt_token=access_token)
-        if check_date_and_type_token(payload, ACCESS_TOKEN_TYPE):
-            if not await self.get_from_black_list(access_token):
-                check_superuser = await self.is_superuser(payload)
-
-                if check_superuser:
-                    return True
-
-                has_permission = await self.has_permission(access_token)
-                if has_permission:
-                    if user_id:
-                        user_role = await self.get_user_role(user_id)
-
-                        if user_role == Role_names.admin:
-                            raise HTTPException(
-                                status_code=status.HTTP_401_UNAUTHORIZED,
-                                detail="Admins can't deassign for other admins or superuser.",
-                            )
-
-                        else:
-                            return True
-                    else:
-                        return True
-
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="You are not authorized to perform this action.",
-        )
