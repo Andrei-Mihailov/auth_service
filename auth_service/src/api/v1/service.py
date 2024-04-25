@@ -78,30 +78,29 @@ def allow_this_user(function):
         user_id = kwargs.get('user_id', None)
         tokens = get_tokens_from_cookie(request)
         payload = decode_jwt(jwt_token=tokens.access_token)
-        if not await service.get_from_black_list(tokens.access_token):
-            check_superuser = await is_superuser(payload)
+        check_superuser = await is_superuser(payload)
 
-            if check_superuser:
-                return await function(*args, **kwargs)
+        if check_superuser:
+            return await function(*args, **kwargs)
 
-            has_perm = await has_permission(tokens.access_token)
-            if has_perm:
-                if user_id:
-                    user_role = await service.get_user_role(user_id)
+        has_perm = await has_permission(tokens.access_token)
+        if has_perm:
+            if user_id:
+                user_role = await service.get_user_role(user_id)
 
-                    if user_role == Role_names.admin:
-                        raise HTTPException(
-                            status_code=status.HTTP_403_FORBIDDEN,
-                            detail='This operation is forbidden for you',
-                        )
+                if user_role == Role_names.admin:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail='This operation is forbidden for you',
+                    )
 
-                    else:
-                        return await function(*args, **kwargs)
                 else:
                     return await function(*args, **kwargs)
             else:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail='This operation is forbidden for you',
-                )
+                return await function(*args, **kwargs)
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail='This operation is forbidden for you',
+            )
     return wrapper

@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException, Request
 from sqlalchemy.exc import MissingGreenlet
 
 from api.v1.schemas.roles import (
@@ -29,6 +29,7 @@ router = APIRouter()
 )
 @allow_this_user
 async def create(
+    request: Request,
     role_params: Annotated[RoleParams, Depends()],
     role_service: Annotated[RoleService, Depends(get_role_service)],
 ) -> RolesSchema:
@@ -51,6 +52,7 @@ async def create(
 )
 @allow_this_user
 async def delete(
+    request: Request,
     id_role: str,
     role_service: Annotated[RoleService, Depends(get_role_service)],
 ) -> None:
@@ -73,6 +75,7 @@ async def delete(
 )
 @allow_this_user
 async def change(
+    request: Request,
     id_role: str,
     role_params: Annotated[RoleEditParams, Depends()],
     role_service: Annotated[RoleService, Depends(get_role_service)],
@@ -96,6 +99,7 @@ async def change(
 )
 @allow_this_user
 async def list_roles(
+    request: Request,
     role_service: Annotated[RoleService, Depends(get_role_service)]
 ) -> list[RolesPermissionsSchema]:
     roles_data = await role_service.elements()
@@ -128,6 +132,7 @@ async def list_roles(
 )
 @allow_this_user
 async def add_user_role(
+    request: Request,
     user_id: str,
     id_role: str,
     role_service: Annotated[RoleService, Depends(get_role_service)],
@@ -151,6 +156,7 @@ async def add_user_role(
 )
 @allow_this_user
 async def del_user_role(
+    request: Request,
     user_id: str,
     role_service: Annotated[RoleService, Depends(get_role_service)],
 ) -> UserRoleSchema:

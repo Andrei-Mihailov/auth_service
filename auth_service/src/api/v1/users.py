@@ -154,10 +154,13 @@ async def refresh_token(
     dependencies=[Depends(check_jwt)]
 )
 async def get_login_history(
+    request: Request,
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
     pagination_params: Annotated[PaginationParams, Depends()],
 ) -> list[AuthenticationSchema]:
+    tokens = get_tokens_from_cookie(request)
     auth_data = await auth_service.login_history(
+        tokens.access_token,
         pagination_params.page_size,
         pagination_params.page_number
     )

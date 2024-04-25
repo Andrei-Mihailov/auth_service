@@ -20,14 +20,14 @@ class AuthService(BaseService):
         await self.create_new_instance(auth_params)
 
     async def login_history(
-        self, access_token: str, limit: int = 10, offset: int = 0
+        self, access_token: str, limit: int = 10, page_number: int = 1
     ) -> list[Authentication]:
 
         payload = decode_jwt(jwt_token=access_token)
         user_uuid = payload.get("sub")
         # получить историю авторизаций по id_user_history модель Authentication
         auths_list = await self.get_login_history(
-            user_uuid, limit=limit, offset=offset
+            user_uuid, limit=limit, offset=limit * (page_number - 1)
         )
         if auths_list is None:
             raise HTTPException(

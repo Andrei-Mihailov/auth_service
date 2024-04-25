@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException, Request
 
 from api.v1.schemas.roles import (
     PermissionsParams,
@@ -25,6 +25,7 @@ router = APIRouter()
 )
 @allow_this_user
 async def create_permission(
+    request: Request,
     permission_params: Annotated[PermissionsParams, Depends()],
     permission_service: PermissionService = Depends(get_permission_service),
 ) -> PermissionsSchema:
@@ -52,6 +53,7 @@ async def create_permission(
 )
 @allow_this_user
 async def assign_permission_to_role(
+    request: Request,
     permission_params: Annotated[RolePermissionsParams, Depends()],
     permission_service: PermissionService = Depends(get_permission_service),
 ) -> bool:
@@ -76,6 +78,7 @@ async def assign_permission_to_role(
 )
 @allow_this_user
 async def remove_permission_from_role(
+    request: Request,
     permission_params: Annotated[RolePermissionsParams, Depends()],
     permission_service: PermissionService = Depends(get_permission_service),
 ) -> bool:

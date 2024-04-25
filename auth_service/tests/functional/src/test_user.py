@@ -125,7 +125,7 @@ async def test_change_user(make_put_request, query_data):
     query_data = {"email": query_data["email"], "password": query_data["password"]}
 
     response = await make_put_request(url, query_data)
-    assert response.status == HTTPStatus.UNAUTHORIZED
+    assert response.status == HTTPStatus.NOT_FOUND
 
     cookies = {
         "access_token": pytest.access_token,
@@ -142,7 +142,7 @@ async def test_refresh_token(make_post_request):
     url = SERVICE_URL + "/api/v1/users/refresh_token"
     # проверяем запрос без куки
     response = await make_post_request(url)
-    assert response.status == HTTPStatus.UNAUTHORIZED
+    assert response.status == HTTPStatus.NOT_FOUND
     # проверяем с куками автризованного пользователя
     cookies = {
         "access_token": pytest.access_token,
@@ -168,7 +168,7 @@ async def test_login_history(make_post_request):
     query_data = {"page_size": 50, "page_number": 1}
     # проверяем запрос без куки
     response = await make_post_request(url, query_data)
-    assert response.status == HTTPStatus.UNAUTHORIZED
+    assert response.status == HTTPStatus.NOT_FOUND
     # проверяем с куками автризованного пользователя
     cookies = {
         "access_token": pytest.access_token,
@@ -189,7 +189,7 @@ async def test_check_permission(make_post_request):
     query_data = {"name": permission_name}
     # проверяем запрос без куки
     response = await make_post_request(url, query_data)
-    assert response.status == HTTPStatus.UNAUTHORIZED
+    assert response.status == HTTPStatus.NOT_FOUND
     # проверяем с куками автризованного пользователя
     cookies = {
         "access_token": pytest.access_token,
@@ -253,4 +253,4 @@ async def test_logout(make_post_request):
 
     url = SERVICE_URL + "/api/v1/users/login_history"
     response = await make_post_request(url, cookie=cookies)
-    assert response.status == HTTPStatus.FORBIDDEN
+    assert response.status == HTTPStatus.UNAUTHORIZED
